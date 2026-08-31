@@ -9,9 +9,12 @@ Description: >
 # DEPLOY COMMAND
 #   aws cloudformation deploy \
 #     --template-file day5-data.yaml \
-#     --stack-name ivr-ws-YOURNAME-day5 \
+#     --stack-name nmc-YOURNAME-day5 \
 #     --parameter-overrides ParticipantName=YOURNAME \
-#     --region us-west-2
+#     --region YOUR_REGION
+#
+# Replace YOURNAME with the SAME name you used on all previous day templates.
+# Replace YOUR_REGION with your AWS region (e.g., us-east-1, us-west-2, ap-south-1)
 # ============================================================
 
 Parameters:
@@ -32,8 +35,8 @@ Resources:
   PatientsDataSeeder:
     Type: Custom::SampleDataSeeder
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-patients'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-patients'
       SampleData: |
         [
           {"patientId":"P-1001","phoneNumber":"+16505551001","firstName":"Aarav","lastName":"Sharma","dateOfBirth":"1985-03-15","email":"aarav.sharma@example.com","address":"123 Maple St, San Jose, CA 95101"},
@@ -46,8 +49,8 @@ Resources:
   ProvidersDataSeeder:
     Type: Custom::SampleDataSeeder
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-providers'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-providers'
       SampleData: |
         [
           {"providerId":"DR-001","name":"Dr. Sarah Mitchell","specialty":"General Practice","availableDays":["Monday","Tuesday","Wednesday","Thursday","Friday"]},
@@ -60,8 +63,8 @@ Resources:
   AvailableSlotsDataSeeder:
     Type: Custom::SampleDataSeeder
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-available-slots'
       SampleData: |
         [
           {"slotId":"SL-20260901-DR001-0900","providerId":"DR-001","appointmentDate":"2026-09-01","startTime":"09:00","endTime":"09:30","status":"available","specialty":"General Practice","slotDate":"2026-09-01"},
@@ -81,8 +84,8 @@ Resources:
     Type: Custom::SampleDataSeeder
     DependsOn: [PatientsDataSeeder, ProvidersDataSeeder, AvailableSlotsDataSeeder]
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-appointments'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-appointments'
       SampleData: |
         [
           {"appointmentId":"APT-20260901-P1001-DR001","patientId":"P-1001","providerId":"DR-001","slotId":"SL-20260829-DR001-0900","appointmentDate":"2026-09-01","startTime":"09:00","specialty":"General Practice","status":"confirmed","phoneNumber":"+16505551001","createdAt":"2026-08-10T10:23:00Z"},
@@ -94,8 +97,8 @@ Resources:
     Type: Custom::SampleDataSeeder
     DependsOn: PatientsDataSeeder
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-prescription-requests'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-prescription-requests'
       SampleData: |
         [
           {"requestId":"RX-20260810-P1001-001","patientId":"P-1001","medicationName":"Lisinopril","prescriptionId":"RX-A42891","dosage":"10mg","quantity":"30 tablets","status":"pending_review","createdAt":"2026-08-10T11:00:00Z"},
@@ -107,8 +110,8 @@ Resources:
     Type: Custom::SampleDataSeeder
     DependsOn: [PatientsDataSeeder, AppointmentsDataSeeder, PrescriptionRequestsDataSeeder]
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
-      TableName: !Sub 'ivr-ws-${ParticipantName}-call-logs'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'nmc-${ParticipantName}-call-logs'
       SampleData: |
         [
           {"callId":"CALL-20260810-P1001-001","patientId":"P-1001","contactId":"CONTACT-SAMPLE-001","outcome":"appointment_booked","summary":"Patient booked a General Practice appointment for 2026-08-19 at 09:00 with Dr. Sarah Mitchell.","startTime":"2026-08-10T10:20:00Z","endTime":"2026-08-10T10:25:30Z","durationSeconds":"330","callDate":"2026-08-10"},
@@ -119,8 +122,8 @@ Resources:
   ApiKeyIdLookup:
     Type: Custom::ApiKeyRetrieval
     Properties:
-      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-api-key-retrieval'
-      ApiKeyName: !Sub 'ivr-ws-${ParticipantName}-api-key'
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-api-key-retrieval'
+      ApiKeyName: !Sub 'nmc-${ParticipantName}-api-key'
 
 Outputs:
 
@@ -138,14 +141,14 @@ Outputs:
     Description: Quick summary of your deployed resources
     Value: !Sub >-
       Participant: ${ParticipantName} |
-      Tables: ivr-ws-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs] |
-      Lambdas: ivr-ws-${ParticipantName}-[verify-identity|book-appointment|...] |
-      KB Bucket: ivr-ws-${ParticipantName}-kb-${AWS::AccountId}
+      Tables: nmc-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs] |
+      Lambdas: nmc-${ParticipantName}-[verify-identity|book-appointment|...] |
+      KB Bucket: nmc-${ParticipantName}-kb-${AWS::AccountId}
 
   HowToGetApiEndpoint:
     Description: Run this CLI command to get your API Gateway endpoint from the Day 4 stack
     Value: !Sub >-
-      aws cloudformation describe-stacks --stack-name ivr-ws-${ParticipantName}-day4
-      --region us-west-2
+      aws cloudformation describe-stacks --stack-name nmc-${ParticipantName}-day4
+      --region ${AWS::Region}
       --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue"
       --output text

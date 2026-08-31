@@ -9,9 +9,12 @@ Description: >
 # DEPLOY COMMAND
 #   aws cloudformation deploy \
 #     --template-file day4-apigateway.yaml \
-#     --stack-name ivr-ws-YOURNAME-day4 \
+#     --stack-name nmc-YOURNAME-day4 \
 #     --parameter-overrides ParticipantName=YOURNAME \
-#     --region us-west-2
+#     --region YOUR_REGION
+#
+# Replace YOURNAME with the SAME name you used on Day 1 and Day 3.
+# Replace YOUR_REGION with your AWS region (e.g., us-east-1, us-west-2, ap-south-1)
 # ============================================================
 
 Parameters:
@@ -33,7 +36,7 @@ Resources:
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub 'ivr-ws-${ParticipantName}-api'
+      Name: !Sub 'nmc-${ParticipantName}-api'
       Description: !Sub 'IVR Workshop API for participant ${ParticipantName}'
       EndpointConfiguration:
         Types: [REGIONAL]
@@ -70,7 +73,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-verify-identity/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-verify-identity/invocations'
 
   VerifyIdentityOptions:
     Type: AWS::ApiGateway::Method
@@ -102,7 +105,7 @@ Resources:
   VerifyIdentityPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-verify-identity'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-verify-identity'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/verify-identity'
@@ -127,7 +130,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-check-available-slots/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-check-available-slots/invocations'
 
   CheckAvailableSlotsOptions:
     Type: AWS::ApiGateway::Method
@@ -159,7 +162,7 @@ Resources:
   CheckAvailableSlotsPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-check-available-slots'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-check-available-slots'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/check-available-slots'
@@ -184,7 +187,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-book-appointment/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-book-appointment/invocations'
 
   BookAppointmentOptions:
     Type: AWS::ApiGateway::Method
@@ -216,7 +219,7 @@ Resources:
   BookAppointmentPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-book-appointment'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-book-appointment'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/book-appointment'
@@ -241,7 +244,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-reschedule-appointment/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-reschedule-appointment/invocations'
 
   RescheduleAppointmentOptions:
     Type: AWS::ApiGateway::Method
@@ -273,7 +276,7 @@ Resources:
   RescheduleAppointmentPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-reschedule-appointment'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-reschedule-appointment'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/reschedule-appointment'
@@ -298,7 +301,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-cancel-appointment/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-cancel-appointment/invocations'
 
   CancelAppointmentOptions:
     Type: AWS::ApiGateway::Method
@@ -330,7 +333,7 @@ Resources:
   CancelAppointmentPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-cancel-appointment'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-cancel-appointment'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/cancel-appointment'
@@ -355,7 +358,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-lookup-appointment/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-lookup-appointment/invocations'
 
   LookupAppointmentOptions:
     Type: AWS::ApiGateway::Method
@@ -387,7 +390,7 @@ Resources:
   LookupAppointmentPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-lookup-appointment'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-lookup-appointment'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/lookup-appointment'
@@ -412,7 +415,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-request-prescription-refill/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-request-prescription-refill/invocations'
 
   RequestPrescriptionRefillOptions:
     Type: AWS::ApiGateway::Method
@@ -444,7 +447,7 @@ Resources:
   RequestPrescriptionRefillPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-request-prescription-refill'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-request-prescription-refill'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/request-prescription-refill'
@@ -469,7 +472,7 @@ Resources:
       Integration:
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-log-call-result/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-log-call-result/invocations'
 
   LogCallResultOptions:
     Type: AWS::ApiGateway::Method
@@ -501,7 +504,7 @@ Resources:
   LogCallResultPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-log-call-result'
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-log-call-result'
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/log-call-result'
@@ -532,7 +535,7 @@ Resources:
       StageName: prod
       TracingEnabled: true
       AccessLogSetting:
-        DestinationArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigateway/ivr-ws-${ParticipantName}/access'
+        DestinationArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigateway/nmc-${ParticipantName}/access'
         Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","method":"$context.httpMethod","resource":"$context.resourcePath","status":"$context.status","latency":"$context.integrationLatency"}'
       MethodSettings:
         - ResourcePath: '/*'
@@ -548,7 +551,7 @@ Resources:
     Type: AWS::ApiGateway::ApiKey
     DependsOn: ApiStage
     Properties:
-      Name: !Sub 'ivr-ws-${ParticipantName}-api-key'
+      Name: !Sub 'nmc-${ParticipantName}-api-key'
       Enabled: true
       Tags:
         - Key: Participant
@@ -558,7 +561,7 @@ Resources:
     Type: AWS::ApiGateway::UsagePlan
     DependsOn: ApiStage
     Properties:
-      UsagePlanName: !Sub 'ivr-ws-${ParticipantName}-usage-plan'
+      UsagePlanName: !Sub 'nmc-${ParticipantName}-usage-plan'
       ApiStages:
         - ApiId: !Ref RestApi
           Stage: prod

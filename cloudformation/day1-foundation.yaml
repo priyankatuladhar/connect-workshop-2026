@@ -8,7 +8,7 @@ Description: >
 # DEPLOY COMMAND
 #   aws cloudformation deploy \
 #     --template-file day1-foundation.yaml \
-#     --stack-name ivr-ws-YOURNAME-day1 \
+#     --stack-name nmc-YOURNAME-day1 \
 #     --parameter-overrides \
 #         ParticipantName=YOURNAME \
 #         KmsKeyArn=arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a \
@@ -80,7 +80,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub 'ivr-ws-${ParticipantName}-access-logs-${AWS::AccountId}'
+      BucketName: !Sub 'nmc-${ParticipantName}-access-logs-${AWS::AccountId}'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -127,7 +127,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub 'ivr-ws-${ParticipantName}-kb-${AWS::AccountId}'
+      BucketName: !Sub 'nmc-${ParticipantName}-kb-${AWS::AccountId}'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -185,7 +185,7 @@ Resources:
   NotificationTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub 'ivr-ws-${ParticipantName}-notifications'
+      TopicName: !Sub 'nmc-${ParticipantName}-notifications'
       DisplayName: !Sub 'IVR Workshop - ${ParticipantName} Notifications'
       KmsMasterKeyId: !Ref KmsKeyArn
       Tags:
@@ -208,7 +208,7 @@ Resources:
   KMSDecryptPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-kms-decrypt'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-kms-decrypt'
       Description: !Sub 'KMS decrypt for participant ${ParticipantName}'
       PolicyDocument:
         Version: '2012-10-17'
@@ -224,7 +224,7 @@ Resources:
   LambdaExecDynamoDBPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-lambda-dynamodb'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-lambda-dynamodb'
       Description: !Sub 'DynamoDB CRUD for participant ${ParticipantName} Lambda functions'
       PolicyDocument:
         Version: '2012-10-17'
@@ -257,7 +257,7 @@ Resources:
   LambdaExecSNSPublishPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-lambda-sns-publish'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-lambda-sns-publish'
       Description: !Sub 'SNS publish for participant ${ParticipantName}'
       PolicyDocument:
         Version: '2012-10-17'
@@ -270,7 +270,7 @@ Resources:
   CustomerLookupDynamoDBPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-customer-lookup-dynamodb'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-customer-lookup-dynamodb'
       Description: !Sub 'PatientsTable read-only for participant ${ParticipantName} customer-lookup Lambda'
       PolicyDocument:
         Version: '2012-10-17'
@@ -287,7 +287,7 @@ Resources:
   UpdateQSessionWisdomPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-update-q-session-wisdom'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-update-q-session-wisdom'
       Description: !Sub 'Q in Connect session write for participant ${ParticipantName}'
       PolicyDocument:
         Version: '2012-10-17'
@@ -305,7 +305,7 @@ Resources:
   SeederDynamoDBWritePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-seeder-dynamodb'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-seeder-dynamodb'
       Description: !Sub 'DynamoDB write for participant ${ParticipantName} sample data seeder'
       PolicyDocument:
         Version: '2012-10-17'
@@ -327,7 +327,7 @@ Resources:
   ApiKeyRetrievalPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-apikey-retrieval'
+      ManagedPolicyName: !Sub 'nmc-${ParticipantName}-apikey-retrieval'
       Description: !Sub 'API key retrieval for participant ${ParticipantName}'
       PolicyDocument:
         Version: '2012-10-17'
@@ -344,7 +344,7 @@ Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'ivr-ws-${ParticipantName}-lambda-exec-role'
+      RoleName: !Sub 'nmc-${ParticipantName}-lambda-exec-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -365,7 +365,7 @@ Resources:
   CustomerLookupRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'ivr-ws-${ParticipantName}-customer-lookup-role'
+      RoleName: !Sub 'nmc-${ParticipantName}-customer-lookup-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -385,7 +385,7 @@ Resources:
   UpdateQSessionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'ivr-ws-${ParticipantName}-update-q-session-role'
+      RoleName: !Sub 'nmc-${ParticipantName}-update-q-session-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -405,7 +405,7 @@ Resources:
   SampleDataSeederRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'ivr-ws-${ParticipantName}-seeder-role'
+      RoleName: !Sub 'nmc-${ParticipantName}-seeder-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -424,7 +424,7 @@ Resources:
   ApiKeyRetrievalRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub 'ivr-ws-${ParticipantName}-apikey-retrieval-role'
+      RoleName: !Sub 'nmc-${ParticipantName}-apikey-retrieval-role'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -448,7 +448,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-patients'
+      TableName: !Sub 'nmc-${ParticipantName}-patients'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -482,7 +482,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-appointments'
+      TableName: !Sub 'nmc-${ParticipantName}-appointments'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -540,7 +540,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-providers'
+      TableName: !Sub 'nmc-${ParticipantName}-providers'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -572,7 +572,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      TableName: !Sub 'nmc-${ParticipantName}-available-slots'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -618,7 +618,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-prescription-requests'
+      TableName: !Sub 'nmc-${ParticipantName}-prescription-requests'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -660,7 +660,7 @@ Resources:
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      TableName: !Sub 'ivr-ws-${ParticipantName}-call-logs'
+      TableName: !Sub 'nmc-${ParticipantName}-call-logs'
       BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: true
@@ -757,5 +757,5 @@ Outputs:
     Description: Summary of what was created for your reference
     Value: !Sub >-
       Participant: ${ParticipantName} |
-      KB Bucket: ivr-ws-${ParticipantName}-kb-${AWS::AccountId} |
-      Tables: ivr-ws-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs]
+      KB Bucket: nmc-${ParticipantName}-kb-${AWS::AccountId} |
+      Tables: nmc-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs]
