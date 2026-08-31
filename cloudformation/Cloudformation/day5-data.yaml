@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  IVR Workshop - Day 5: Sample Data Seeder + API Key Retrieval.
+  Seeds all 6 DynamoDB tables with sample patient data and retrieves your API key value.
+  Deploy on Day 5 at the start of the lab, or on Day 3 after deploying day4-apigateway.yaml.
+  PREREQUISITE: day4-apigateway.yaml stack must be CREATE_COMPLETE.
+
+# ============================================================
+# DEPLOY COMMAND
+#   aws cloudformation deploy \
+#     --template-file day5-data.yaml \
+#     --stack-name ivr-ws-YOURNAME-day5 \
+#     --parameter-overrides ParticipantName=YOURNAME \
+#     --region us-west-2
+# ============================================================
+
+Parameters:
+
+  ParticipantName:
+    Type: String
+    Description: Your participant name — must match all previous day templates exactly.
+    AllowedPattern: ^[a-z][a-z0-9-]{1,18}[a-z0-9]$
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: "Who Are You? (must match all previous days)" }
+        Parameters: [ParticipantName]
+
+Resources:
+
+  PatientsDataSeeder:
+    Type: Custom::SampleDataSeeder
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-patients'
+      SampleData: |
+        [
+          {"patientId":"P-1001","phoneNumber":"+16505551001","firstName":"Aarav","lastName":"Sharma","dateOfBirth":"1985-03-15","email":"aarav.sharma@example.com","address":"123 Maple St, San Jose, CA 95101"},
+          {"patientId":"P-1002","phoneNumber":"+16505551002","firstName":"Priya","lastName":"Thapa","dateOfBirth":"1990-07-22","email":"priya.thapa@example.com","address":"456 Oak Ave, Fremont, CA 94536"},
+          {"patientId":"P-1003","phoneNumber":"+16505551003","firstName":"Bikram","lastName":"Rai","dateOfBirth":"1978-11-05","email":"bikram.rai@example.com","address":"789 Pine Rd, Sunnyvale, CA 94085"},
+          {"patientId":"P-1004","phoneNumber":"+16505551004","firstName":"Sunita","lastName":"Gurung","dateOfBirth":"1995-02-14","email":"sunita.gurung@example.com","address":"321 Cedar Ln, Santa Clara, CA 95050"},
+          {"patientId":"P-1005","phoneNumber":"+16505551005","firstName":"Rajesh","lastName":"Karki","dateOfBirth":"1967-09-30","email":"rajesh.karki@example.com","address":"654 Birch Blvd, Mountain View, CA 94041"}
+        ]
+
+  ProvidersDataSeeder:
+    Type: Custom::SampleDataSeeder
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-providers'
+      SampleData: |
+        [
+          {"providerId":"DR-001","name":"Dr. Sarah Mitchell","specialty":"General Practice","availableDays":["Monday","Tuesday","Wednesday","Thursday","Friday"]},
+          {"providerId":"DR-002","name":"Dr. James Patel","specialty":"Internal Medicine","availableDays":["Monday","Wednesday","Friday"]},
+          {"providerId":"DR-003","name":"Dr. Linda Nguyen","specialty":"Pediatrics","availableDays":["Tuesday","Thursday","Saturday"]},
+          {"providerId":"DR-004","name":"Dr. Michael Torres","specialty":"Cardiology","availableDays":["Monday","Tuesday","Thursday"]},
+          {"providerId":"DR-005","name":"Dr. Amelia Chen","specialty":"Dermatology","availableDays":["Wednesday","Thursday","Friday"]}
+        ]
+
+  AvailableSlotsDataSeeder:
+    Type: Custom::SampleDataSeeder
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      SampleData: |
+        [
+          {"slotId":"SL-20260901-DR001-0900","providerId":"DR-001","appointmentDate":"2026-09-01","startTime":"09:00","endTime":"09:30","status":"available","specialty":"General Practice","slotDate":"2026-09-01"},
+          {"slotId":"SL-20260901-DR001-1000","providerId":"DR-001","appointmentDate":"2026-09-01","startTime":"10:00","endTime":"10:30","status":"available","specialty":"General Practice","slotDate":"2026-09-01"},
+          {"slotId":"SL-20260901-DR001-1100","providerId":"DR-001","appointmentDate":"2026-09-01","startTime":"11:00","endTime":"11:30","status":"available","specialty":"General Practice","slotDate":"2026-09-01"},
+          {"slotId":"SL-20260902-DR002-1400","providerId":"DR-002","appointmentDate":"2026-09-02","startTime":"14:00","endTime":"14:30","status":"available","specialty":"Internal Medicine","slotDate":"2026-09-02"},
+          {"slotId":"SL-20260902-DR002-1500","providerId":"DR-002","appointmentDate":"2026-09-02","startTime":"15:00","endTime":"15:30","status":"available","specialty":"Internal Medicine","slotDate":"2026-09-02"},
+          {"slotId":"SL-20260903-DR003-0930","providerId":"DR-003","appointmentDate":"2026-09-03","startTime":"09:30","endTime":"10:00","status":"available","specialty":"Pediatrics","slotDate":"2026-09-03"},
+          {"slotId":"SL-20260903-DR003-1030","providerId":"DR-003","appointmentDate":"2026-09-03","startTime":"10:30","endTime":"11:00","status":"available","specialty":"Pediatrics","slotDate":"2026-09-03"},
+          {"slotId":"SL-20260904-DR004-0800","providerId":"DR-004","appointmentDate":"2026-09-04","startTime":"08:00","endTime":"08:30","status":"available","specialty":"Cardiology","slotDate":"2026-09-04"},
+          {"slotId":"SL-20260904-DR004-0830","providerId":"DR-004","appointmentDate":"2026-09-04","startTime":"08:30","endTime":"09:00","status":"available","specialty":"Cardiology","slotDate":"2026-09-04"},
+          {"slotId":"SL-20260905-DR005-1300","providerId":"DR-005","appointmentDate":"2026-09-05","startTime":"13:00","endTime":"13:30","status":"available","specialty":"Dermatology","slotDate":"2026-09-05"},
+          {"slotId":"SL-20260829-DR001-0900","providerId":"DR-001","appointmentDate":"2026-08-29","startTime":"09:00","endTime":"09:30","status":"booked","specialty":"General Practice","slotDate":"2026-08-29"}
+        ]
+
+  AppointmentsDataSeeder:
+    Type: Custom::SampleDataSeeder
+    DependsOn: [PatientsDataSeeder, ProvidersDataSeeder, AvailableSlotsDataSeeder]
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-appointments'
+      SampleData: |
+        [
+          {"appointmentId":"APT-20260901-P1001-DR001","patientId":"P-1001","providerId":"DR-001","slotId":"SL-20260829-DR001-0900","appointmentDate":"2026-09-01","startTime":"09:00","specialty":"General Practice","status":"confirmed","phoneNumber":"+16505551001","createdAt":"2026-08-10T10:23:00Z"},
+          {"appointmentId":"APT-20260815-P1002-DR002","patientId":"P-1002","providerId":"DR-002","slotId":"SL-COMPLETED","appointmentDate":"2026-08-15","startTime":"14:00","specialty":"Internal Medicine","status":"completed","phoneNumber":"+16505551002","createdAt":"2026-08-01T14:05:00Z"},
+          {"appointmentId":"APT-20260903-P1003-DR003","patientId":"P-1003","providerId":"DR-003","slotId":"SL-20260903-DR003-0930","appointmentDate":"2026-09-03","startTime":"09:30","specialty":"Pediatrics","status":"confirmed","phoneNumber":"+16505551003","createdAt":"2026-08-14T09:11:00Z"}
+        ]
+
+  PrescriptionRequestsDataSeeder:
+    Type: Custom::SampleDataSeeder
+    DependsOn: PatientsDataSeeder
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-prescription-requests'
+      SampleData: |
+        [
+          {"requestId":"RX-20260810-P1001-001","patientId":"P-1001","medicationName":"Lisinopril","prescriptionId":"RX-A42891","dosage":"10mg","quantity":"30 tablets","status":"pending_review","createdAt":"2026-08-10T11:00:00Z"},
+          {"requestId":"RX-20260805-P1002-001","patientId":"P-1002","medicationName":"Metformin","prescriptionId":"RX-B31044","dosage":"500mg","quantity":"60 tablets","status":"approved","createdAt":"2026-08-05T09:30:00Z"},
+          {"requestId":"RX-20260812-P1005-001","patientId":"P-1005","medicationName":"Atorvastatin","prescriptionId":"RX-C55123","dosage":"20mg","quantity":"30 tablets","status":"pending_review","createdAt":"2026-08-12T15:45:00Z"}
+        ]
+
+  CallLogsDataSeeder:
+    Type: Custom::SampleDataSeeder
+    DependsOn: [PatientsDataSeeder, AppointmentsDataSeeder, PrescriptionRequestsDataSeeder]
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-sample-data-seeder'
+      TableName: !Sub 'ivr-ws-${ParticipantName}-call-logs'
+      SampleData: |
+        [
+          {"callId":"CALL-20260810-P1001-001","patientId":"P-1001","contactId":"CONTACT-SAMPLE-001","outcome":"appointment_booked","summary":"Patient booked a General Practice appointment for 2026-08-19 at 09:00 with Dr. Sarah Mitchell.","startTime":"2026-08-10T10:20:00Z","endTime":"2026-08-10T10:25:30Z","durationSeconds":"330","callDate":"2026-08-10"},
+          {"callId":"CALL-20260805-P1002-001","patientId":"P-1002","contactId":"CONTACT-SAMPLE-002","outcome":"prescription_refill_requested","summary":"Patient requested refill for Metformin 500mg, prescription RX-B31044.","startTime":"2026-08-05T09:27:00Z","endTime":"2026-08-05T09:32:45Z","durationSeconds":"345","callDate":"2026-08-05"},
+          {"callId":"CALL-20260801-UNKNOWN-001","patientId":"UNKNOWN","contactId":"CONTACT-SAMPLE-003","outcome":"escalated_agent","summary":"Unverified caller requested to speak with a human agent.","startTime":"2026-08-01T14:10:00Z","endTime":"2026-08-01T14:12:00Z","durationSeconds":"120","callDate":"2026-08-01"}
+        ]
+
+  ApiKeyIdLookup:
+    Type: Custom::ApiKeyRetrieval
+    Properties:
+      ServiceToken: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:ivr-ws-${ParticipantName}-api-key-retrieval'
+      ApiKeyName: !Sub 'ivr-ws-${ParticipantName}-api-key'
+
+Outputs:
+
+  ApiKeyValue:
+    Description: >
+      YOUR API key plaintext value. Paste this into AgentCore Gateway X-Api-Key field.
+      TREAT AS A SECRET — do not share or commit to version control.
+    Value: !GetAtt ApiKeyIdLookup.ApiKeyValue
+
+  SampleDataStatus:
+    Description: Number of call log records seeded — non-zero means seeding succeeded
+    Value: !GetAtt CallLogsDataSeeder.ItemsSeeded
+
+  ParticipantResources:
+    Description: Quick summary of your deployed resources
+    Value: !Sub >-
+      Participant: ${ParticipantName} |
+      Tables: ivr-ws-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs] |
+      Lambdas: ivr-ws-${ParticipantName}-[verify-identity|book-appointment|...] |
+      KB Bucket: ivr-ws-${ParticipantName}-kb-${AWS::AccountId}
+
+  HowToGetApiEndpoint:
+    Description: Run this CLI command to get your API Gateway endpoint from the Day 4 stack
+    Value: !Sub >-
+      aws cloudformation describe-stacks --stack-name ivr-ws-${ParticipantName}-day4
+      --region us-west-2
+      --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue"
+      --output text

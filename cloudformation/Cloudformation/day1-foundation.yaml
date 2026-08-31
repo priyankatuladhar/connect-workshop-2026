@@ -1,0 +1,761 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  IVR Workshop - Day 1: Foundation Infrastructure.
+  Creates S3, SNS, IAM roles/policies, and DynamoDB tables for one participant.
+  Deploy this FIRST on Day 1 before starting the lab exercises.
+
+# ============================================================
+# DEPLOY COMMAND
+#   aws cloudformation deploy \
+#     --template-file day1-foundation.yaml \
+#     --stack-name ivr-ws-YOURNAME-day1 \
+#     --parameter-overrides \
+#         ParticipantName=YOURNAME \
+#         KmsKeyArn=arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a \
+#         AdminEmail=your@email.com \
+#     --capabilities CAPABILITY_NAMED_IAM \
+#     --region us-west-2
+#
+# Replace YOURNAME with your name (lowercase, letters/numbers/hyphens only, e.g. "alice" or "bob-smith")
+# ============================================================
+
+Parameters:
+
+  ParticipantName:
+    Type: String
+    Description: >
+      YOUR name in lowercase (e.g. "alice" or "bob-smith").
+      This makes all your resources unique so they don't clash with other participants.
+      Must be lowercase letters, numbers, and hyphens only. No spaces.
+    AllowedPattern: ^[a-z][a-z0-9-]{1,18}[a-z0-9]$
+    ConstraintDescription: >
+      Must be 3-20 characters. Lowercase letters, numbers, hyphens only.
+      Must start and end with a letter or number. No spaces or underscores.
+
+  KmsKeyArn:
+    Type: String
+    Description: >
+      ARN of the shared workshop KMS key. Your instructor will provide this value.
+      Do not change it — all participants use the same key.
+    Default: 'arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a'
+    AllowedPattern: ^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/.+$
+    ConstraintDescription: Must be a valid KMS key ARN.
+
+  AdminEmail:
+    Type: String
+    Description: >
+      Your email address. You will receive a confirmation email from AWS SNS —
+      click the link to confirm it so booking notifications work.
+    AllowedPattern: ^[^@]+@[^@]+\.[^@]+$
+    ConstraintDescription: Must be a valid email address.
+
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30]
+    Description: CloudWatch log retention in days. Default 7 is fine for the workshop.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: "Who Are You?" }
+        Parameters: [ParticipantName]
+      - Label: { default: "Shared Workshop Settings (do not change)" }
+        Parameters: [KmsKeyArn]
+      - Label: { default: "Your Settings" }
+        Parameters: [AdminEmail, LogRetentionDays]
+    ParameterLabels:
+      ParticipantName: { default: "Your Name (lowercase, e.g. alice)" }
+      KmsKeyArn: { default: "Workshop KMS Key ARN (shared - provided by instructor)" }
+      AdminEmail: { default: "Your Email for Booking Notifications" }
+
+Resources:
+
+  # ============================================================
+  # S3 BUCKETS
+  # ============================================================
+
+  S3AccessLogsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'ivr-ws-${ParticipantName}-access-logs-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireAccessLogs
+            Status: Enabled
+            ExpirationInDays: 30
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: Workshop
+          Value: ivr-workshop
+        - Key: Day
+          Value: '1'
+
+  S3AccessLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3AccessLogsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowS3LogDelivery
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub '${S3AccessLogsBucket.Arn}/s3-access-logs/*'
+            Condition:
+              ArnLike:
+                aws:SourceArn: !GetAtt KnowledgeBaseBucket.Arn
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
+  KnowledgeBaseBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'ivr-ws-${ParticipantName}-kb-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Ref KmsKeyArn
+            BucketKeyEnabled: true
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration:
+        DestinationBucketName: !Ref S3AccessLogsBucket
+        LogFilePrefix: s3-access-logs/
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: Workshop
+          Value: ivr-workshop
+        - Key: Day
+          Value: '1'
+
+  KnowledgeBaseBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref KnowledgeBaseBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyUnencryptedObjectUploads
+            Effect: Deny
+            Principal: '*'
+            Action: s3:PutObject
+            Resource: !Sub '${KnowledgeBaseBucket.Arn}/*'
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: aws:kms
+          - Sid: DenyHTTP
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt KnowledgeBaseBucket.Arn
+              - !Sub '${KnowledgeBaseBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  # ============================================================
+  # SNS
+  # ============================================================
+
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'ivr-ws-${ParticipantName}-notifications'
+      DisplayName: !Sub 'IVR Workshop - ${ParticipantName} Notifications'
+      KmsMasterKeyId: !Ref KmsKeyArn
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: Workshop
+          Value: ivr-workshop
+
+  NotificationSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref NotificationTopic
+      Protocol: email
+      Endpoint: !Ref AdminEmail
+
+  # ============================================================
+  # IAM MANAGED POLICIES
+  # ============================================================
+
+  KMSDecryptPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-kms-decrypt'
+      Description: !Sub 'KMS decrypt for participant ${ParticipantName}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCMKUsage
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:GenerateDataKey
+              - kms:DescribeKey
+            Resource: !Ref KmsKeyArn
+
+  LambdaExecDynamoDBPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-lambda-dynamodb'
+      Description: !Sub 'DynamoDB CRUD for participant ${ParticipantName} Lambda functions'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllTableCRUD
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:Query
+              - dynamodb:Scan
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+            Resource:
+              - !GetAtt PatientsTable.Arn
+              - !Sub '${PatientsTable.Arn}/index/*'
+              - !GetAtt AppointmentsTable.Arn
+              - !Sub '${AppointmentsTable.Arn}/index/*'
+              - !GetAtt ProvidersTable.Arn
+              - !Sub '${ProvidersTable.Arn}/index/*'
+              - !GetAtt AvailableSlotsTable.Arn
+              - !Sub '${AvailableSlotsTable.Arn}/index/*'
+              - !GetAtt PrescriptionRequestsTable.Arn
+              - !Sub '${PrescriptionRequestsTable.Arn}/index/*'
+              - !GetAtt CallLogsTable.Arn
+              - !Sub '${CallLogsTable.Arn}/index/*'
+
+  LambdaExecSNSPublishPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-lambda-sns-publish'
+      Description: !Sub 'SNS publish for participant ${ParticipantName}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublishNotifications
+            Effect: Allow
+            Action: sns:Publish
+            Resource: !Ref NotificationTopic
+
+  CustomerLookupDynamoDBPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-customer-lookup-dynamodb'
+      Description: !Sub 'PatientsTable read-only for participant ${ParticipantName} customer-lookup Lambda'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PatientsReadOnly
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+            Resource:
+              - !GetAtt PatientsTable.Arn
+              - !Sub '${PatientsTable.Arn}/index/*'
+
+  UpdateQSessionWisdomPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-update-q-session-wisdom'
+      Description: !Sub 'Q in Connect session write for participant ${ParticipantName}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: WisdomSessionWrite
+            Effect: Allow
+            Action:
+              - wisdom:UpdateSessionData
+              - wisdom:GetSession
+              - wisdom:ListSessions
+              - connect:DescribeContact
+              - connect:GetContactAttributes
+            Resource: '*'
+
+  SeederDynamoDBWritePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-seeder-dynamodb'
+      Description: !Sub 'DynamoDB write for participant ${ParticipantName} sample data seeder'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: SeederWrite
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:DescribeTable
+            Resource:
+              - !GetAtt PatientsTable.Arn
+              - !GetAtt AppointmentsTable.Arn
+              - !GetAtt ProvidersTable.Arn
+              - !GetAtt AvailableSlotsTable.Arn
+              - !GetAtt PrescriptionRequestsTable.Arn
+              - !GetAtt CallLogsTable.Arn
+
+  ApiKeyRetrievalPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub 'ivr-ws-${ParticipantName}-apikey-retrieval'
+      Description: !Sub 'API key retrieval for participant ${ParticipantName}'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: GetApiKeyValue
+            Effect: Allow
+            Action: apigateway:GET
+            Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys/*'
+
+  # ============================================================
+  # IAM ROLES
+  # ============================================================
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ivr-ws-${ParticipantName}-lambda-exec-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - !Ref KMSDecryptPolicy
+        - !Ref LambdaExecDynamoDBPolicy
+        - !Ref LambdaExecSNSPublishPolicy
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  CustomerLookupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ivr-ws-${ParticipantName}-customer-lookup-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - !Ref KMSDecryptPolicy
+        - !Ref CustomerLookupDynamoDBPolicy
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  UpdateQSessionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ivr-ws-${ParticipantName}-update-q-session-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+        - !Ref KMSDecryptPolicy
+        - !Ref UpdateQSessionWisdomPolicy
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  SampleDataSeederRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ivr-ws-${ParticipantName}-seeder-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref KMSDecryptPolicy
+        - !Ref SeederDynamoDBWritePolicy
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  ApiKeyRetrievalRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'ivr-ws-${ParticipantName}-apikey-retrieval-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref ApiKeyRetrievalPolicy
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  # ============================================================
+  # DYNAMODB TABLES
+  # ============================================================
+
+  PatientsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-patients'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: phoneNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: patientId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: phone-index
+          KeySchema:
+            - AttributeName: phoneNumber
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: DataClassification
+          Value: PHI-Synthetic
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-appointments'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: appointmentId
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: phoneNumber
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: appointmentDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: appointmentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: patientId-index
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: patientPhone-index
+          KeySchema:
+            - AttributeName: phoneNumber
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-date-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: DataClassification
+          Value: PHI-Synthetic
+
+  ProvidersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-providers'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: providerId
+          AttributeType: S
+        - AttributeName: specialty
+          AttributeType: S
+      KeySchema:
+        - AttributeName: providerId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: specialty-index
+          KeySchema:
+            - AttributeName: specialty
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  AvailableSlotsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: slotId
+          AttributeType: S
+        - AttributeName: specialty
+          AttributeType: S
+        - AttributeName: appointmentDate
+          AttributeType: S
+        - AttributeName: providerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: slotId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: specialty-date-index
+          KeySchema:
+            - AttributeName: specialty
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: provider-date-index
+          KeySchema:
+            - AttributeName: providerId
+              KeyType: HASH
+            - AttributeName: appointmentDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  PrescriptionRequestsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-prescription-requests'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: requestId
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+      KeySchema:
+        - AttributeName: requestId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: patientId-index
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: DataClassification
+          Value: PHI-Synthetic
+
+  CallLogsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub 'ivr-ws-${ParticipantName}-call-logs'
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref KmsKeyArn
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: callId
+          AttributeType: S
+        - AttributeName: patientId
+          AttributeType: S
+        - AttributeName: callDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: callId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: patientId-index
+          KeySchema:
+            - AttributeName: patientId
+              KeyType: HASH
+            - AttributeName: callDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: date-index
+          KeySchema:
+            - AttributeName: callDate
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+        - Key: DataClassification
+          Value: AuditLog
+
+# ============================================================
+# OUTPUTS — reference these in later day templates
+# ============================================================
+
+Outputs:
+
+  ParticipantName:
+    Description: Your participant name — used in all subsequent day templates
+    Value: !Ref ParticipantName
+
+  KnowledgeBaseBucketName:
+    Description: Your S3 bucket for FAQ docs and OpenAPI schema
+    Value: !Ref KnowledgeBaseBucket
+
+  KnowledgeBaseBucketArn:
+    Value: !GetAtt KnowledgeBaseBucket.Arn
+
+  NotificationTopicArn:
+    Description: Your SNS topic ARN for booking notifications
+    Value: !Ref NotificationTopic
+
+  PatientsTableName:
+    Value: !Ref PatientsTable
+
+  AppointmentsTableName:
+    Value: !Ref AppointmentsTable
+
+  ProvidersTableName:
+    Value: !Ref ProvidersTable
+
+  AvailableSlotsTableName:
+    Value: !Ref AvailableSlotsTable
+
+  PrescriptionRequestsTableName:
+    Value: !Ref PrescriptionRequestsTable
+
+  CallLogsTableName:
+    Value: !Ref CallLogsTable
+
+  LambdaExecutionRoleArn:
+    Value: !GetAtt LambdaExecutionRole.Arn
+
+  CustomerLookupRoleArn:
+    Value: !GetAtt CustomerLookupRole.Arn
+
+  UpdateQSessionRoleArn:
+    Value: !GetAtt UpdateQSessionRole.Arn
+
+  SampleDataSeederRoleArn:
+    Value: !GetAtt SampleDataSeederRole.Arn
+
+  ApiKeyRetrievalRoleArn:
+    Value: !GetAtt ApiKeyRetrievalRole.Arn
+
+  StackSummary:
+    Description: Summary of what was created for your reference
+    Value: !Sub >-
+      Participant: ${ParticipantName} |
+      KB Bucket: ivr-ws-${ParticipantName}-kb-${AWS::AccountId} |
+      Tables: ivr-ws-${ParticipantName}-[patients|appointments|providers|available-slots|prescription-requests|call-logs]

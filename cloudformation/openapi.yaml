@@ -1,0 +1,434 @@
+openapi: "3.0.1"
+info:
+  title: Nepal Medical Care — IVR Workshop Healthcare API
+  description: >
+    8 healthcare tools exposed via REST API for the IVR Workshop.
+    Used by Bedrock AgentCore Gateway to give the Q in Connect AI Agent
+    the ability to look up records, book appointments, and handle prescriptions.
+  version: "1.0.0"
+
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/prod
+    description: Participant API Gateway endpoint (replace with your own)
+    variables:
+      apiId:
+        default: "your-api-id"
+      region:
+        default: "us-east-1"
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+
+  /tools/verify-identity:
+    post:
+      operationId: verify_identity
+      summary: Verify caller identity
+      description: >
+        Verifies a caller's identity by matching their phone number and date of birth
+        against the patient records. Must be called before any PHI is returned or
+        any booking action is taken.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phoneNumber
+                - dateOfBirth
+              properties:
+                phoneNumber:
+                  type: string
+                  description: Caller's phone number in E.164 format (e.g. +16505551001)
+                  example: "+16505551001"
+                dateOfBirth:
+                  type: string
+                  description: Patient date of birth in YYYY-MM-DD format
+                  example: "1985-03-15"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                  patientId:
+                    type: string
+                    description: Patient ID (only present when verified is true)
+                  firstName:
+                    type: string
+                  lastName:
+                    type: string
+                  reason:
+                    type: string
+                    description: Failure reason (patient_not_found or dob_mismatch) when verified is false
+
+  /tools/check-available-slots:
+    post:
+      operationId: check_available_slots
+      summary: Check available appointment slots
+      description: >
+        Returns open appointment slots filtered by specialty and date range.
+        Use this before booking to show the caller what times are available.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                specialty:
+                  type: string
+                  description: Medical specialty to filter by (e.g. General Practice, Cardiology)
+                  example: "General Practice"
+                preferredDate:
+                  type: string
+                  description: Start date to search from in YYYY-MM-DD format. Defaults to today.
+                  example: "2026-09-01"
+                numberOfDays:
+                  type: integer
+                  description: Number of days to search ahead. Defaults to 7, max 30.
+                  default: 7
+                  example: 7
+      responses:
+        "200":
+          description: List of available slots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  availableSlots:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        slotId:
+                          type: string
+                        providerId:
+                          type: string
+                        providerName:
+                          type: string
+                        specialty:
+                          type: string
+                        appointmentDate:
+                          type: string
+                        startTime:
+                          type: string
+                        endTime:
+                          type: string
+                  totalCount:
+                    type: integer
+
+  /tools/book-appointment:
+    post:
+      operationId: book_appointment
+      summary: Book an appointment
+      description: >
+        Books a specific appointment slot for a verified patient.
+        Uses an atomic conditional update to prevent double-booking.
+        Sends an SNS email confirmation after booking.
+        Requires verify_identity to have succeeded first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patientId
+                - slotId
+              properties:
+                patientId:
+                  type: string
+                  description: Patient ID from verify_identity response
+                  example: "P-1001"
+                slotId:
+                  type: string
+                  description: Slot ID from check_available_slots response
+                  example: "SL-20260901-001"
+      responses:
+        "200":
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  appointmentId:
+                    type: string
+                  appointmentDate:
+                    type: string
+                  startTime:
+                    type: string
+                  specialty:
+                    type: string
+                  status:
+                    type: string
+                    example: "confirmed"
+        "409":
+          description: Slot no longer available
+
+  /tools/reschedule-appointment:
+    post:
+      operationId: reschedule_appointment
+      summary: Reschedule an existing appointment
+      description: >
+        Moves an existing confirmed appointment to a new slot.
+        Atomically books the new slot and frees the old one.
+        Requires verify_identity and lookup_appointment first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - appointmentId
+                - newSlotId
+              properties:
+                appointmentId:
+                  type: string
+                  description: ID of the appointment to reschedule
+                  example: "APT-20260830120000-P-1001-AB12CD"
+                newSlotId:
+                  type: string
+                  description: Slot ID of the new time from check_available_slots
+                  example: "SL-20260905-003"
+      responses:
+        "200":
+          description: Reschedule confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  appointmentId:
+                    type: string
+                  newAppointmentDate:
+                    type: string
+                  newStartTime:
+                    type: string
+                  status:
+                    type: string
+        "409":
+          description: New slot not available or appointment not in reschedulable state
+
+  /tools/cancel-appointment:
+    post:
+      operationId: cancel_appointment
+      summary: Cancel an appointment
+      description: >
+        Cancels an existing confirmed appointment and frees the slot for other patients.
+        Requires verify_identity and lookup_appointment first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - appointmentId
+              properties:
+                appointmentId:
+                  type: string
+                  description: ID of the appointment to cancel
+                  example: "APT-20260830120000-P-1001-AB12CD"
+      responses:
+        "200":
+          description: Cancellation confirmed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  appointmentId:
+                    type: string
+                  status:
+                    type: string
+                    example: "cancelled"
+                  message:
+                    type: string
+
+  /tools/lookup-appointment:
+    post:
+      operationId: lookup_appointment
+      summary: Look up a patient's appointments
+      description: >
+        Returns upcoming confirmed appointments for a verified patient.
+        Use this before cancel or reschedule to find the appointment ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patientId
+              properties:
+                patientId:
+                  type: string
+                  description: Patient ID from verify_identity response
+                  example: "P-1001"
+                includePast:
+                  type: boolean
+                  description: Include past appointments. Defaults to false.
+                  default: false
+      responses:
+        "200":
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        appointmentId:
+                          type: string
+                        patientId:
+                          type: string
+                        providerId:
+                          type: string
+                        appointmentDate:
+                          type: string
+                        startTime:
+                          type: string
+                        specialty:
+                          type: string
+                        status:
+                          type: string
+                  totalCount:
+                    type: integer
+
+  /tools/request-prescription-refill:
+    post:
+      operationId: request_prescription_refill
+      summary: Submit a prescription refill request
+      description: >
+        Creates a prescription refill request with status pending_review.
+        Never auto-approves — always goes to pharmacist review.
+        Requires verify_identity first.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patientId
+                - medicationName
+              properties:
+                patientId:
+                  type: string
+                  description: Patient ID from verify_identity response
+                  example: "P-1001"
+                medicationName:
+                  type: string
+                  description: Name of the medication to refill
+                  example: "Lisinopril"
+                prescriptionId:
+                  type: string
+                  description: Existing prescription ID if known (optional)
+                dosage:
+                  type: string
+                  description: Dosage strength (optional, e.g. 10mg)
+                quantity:
+                  type: string
+                  description: Quantity requested (optional, e.g. 30 tablets)
+      responses:
+        "200":
+          description: Refill request submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  requestId:
+                    type: string
+                  medicationName:
+                    type: string
+                  status:
+                    type: string
+                    example: "pending_review"
+                  message:
+                    type: string
+
+  /tools/log-call-result:
+    post:
+      operationId: log_call_result
+      summary: Log the outcome of a call
+      description: >
+        Writes an audit record for the call. Call this at the end of every interaction
+        to record what happened — booking, cancellation, refill, escalation, etc.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patientId
+                - outcome
+              properties:
+                patientId:
+                  type: string
+                  description: Patient ID (use UNKNOWN if identity was not verified)
+                  example: "P-1001"
+                contactId:
+                  type: string
+                  description: Amazon Connect contact ID (optional)
+                outcome:
+                  type: string
+                  description: Call outcome (e.g. appointment_booked, prescription_requested, escalated, no_action)
+                  example: "appointment_booked"
+                summary:
+                  type: string
+                  description: Brief human-readable summary of what happened on the call
+                startTime:
+                  type: string
+                  description: Call start time in ISO 8601 format (optional)
+                endTime:
+                  type: string
+                  description: Call end time in ISO 8601 format (optional)
+                durationSeconds:
+                  type: integer
+                  description: Call duration in seconds (optional)
+      responses:
+        "200":
+          description: Call logged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  callId:
+                    type: string
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: >
+        API key from your ivr-ws-YOURNAME-api-key resource.
+        Retrieve the value from the Day 5 CloudFormation stack outputs.

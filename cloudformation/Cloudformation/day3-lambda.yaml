@@ -1,0 +1,629 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  IVR Workshop - Day 3: Lambda Functions + CloudWatch Log Groups.
+  Creates all 12 Lambda functions and their pre-CMK-encrypted log groups.
+  Deploy this on Day 3 BEFORE starting the AgentCore Gateway lab.
+  PREREQUISITE: day1-foundation.yaml stack must be CREATE_COMPLETE.
+
+# ============================================================
+# DEPLOY COMMAND
+#   aws cloudformation deploy \
+#     --template-file day3-lambda.yaml \
+#     --stack-name ivr-ws-YOURNAME-day3 \
+#     --parameter-overrides ParticipantName=YOURNAME \
+#     --capabilities CAPABILITY_NAMED_IAM \
+#     --region us-west-2
+#
+# Replace YOURNAME with the SAME name you used on Day 1.
+# ============================================================
+
+Parameters:
+
+  ParticipantName:
+    Type: String
+    Description: >
+      Your participant name — must be EXACTLY the same as what you used in day1-foundation.yaml.
+      This is used to find your Day 1 resources (tables, roles, etc.)
+    AllowedPattern: ^[a-z][a-z0-9-]{1,18}[a-z0-9]$
+
+  KmsKeyArn:
+    Type: String
+    Description: Shared workshop KMS key ARN. Same value as Day 1.
+    Default: 'arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a'
+    AllowedPattern: ^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/.+$
+
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30]
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: "Who Are You? (must match Day 1)" }
+        Parameters: [ParticipantName]
+      - Label: { default: "Shared Workshop Settings (do not change)" }
+        Parameters: [KmsKeyArn, LogRetentionDays]
+
+Resources:
+
+  # ============================================================
+  # CLOUDWATCH LOG GROUPS — pre-created with CMK encryption
+  # Must exist BEFORE Lambda functions or they auto-create without CMK
+  # ============================================================
+
+  LogGroupVerifyIdentity:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-verify-identity'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupCheckAvailableSlots:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-check-available-slots'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupBookAppointment:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-book-appointment'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupRescheduleAppointment:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-reschedule-appointment'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupCancelAppointment:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-cancel-appointment'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupLookupAppointment:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-lookup-appointment'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupRequestPrescriptionRefill:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-request-prescription-refill'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupLogCallResult:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-log-call-result'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupCustomerLookup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-customer-lookup'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupUpdateQSession:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-update-q-session'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupSampleDataSeeder:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-sample-data-seeder'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupApiKeyRetrieval:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/ivr-ws-${ParticipantName}-api-key-retrieval'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  LogGroupApiGatewayAccess:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigateway/ivr-ws-${ParticipantName}/access'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
+  # ============================================================
+  # BUSINESS LAMBDA FUNCTIONS
+  # Role ARNs and table names reconstructed from ParticipantName
+  # All deploy with 501 stub code — real code uploaded after stack
+  # ============================================================
+
+  VerifyIdentityFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupVerifyIdentity
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-verify-identity'
+      Description: !Sub 'Participant ${ParticipantName}: verifies caller identity via phone + DOB'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          PATIENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-patients'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  CheckAvailableSlotsFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupCheckAvailableSlots
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-check-available-slots'
+      Description: !Sub 'Participant ${ParticipantName}: returns open slots by specialty + date'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          AVAILABLE_SLOTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+          PROVIDERS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-providers'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  BookAppointmentFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupBookAppointment
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-book-appointment'
+      Description: !Sub 'Participant ${ParticipantName}: books appointment + sends SNS email'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          APPOINTMENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-appointments'
+          AVAILABLE_SLOTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+          PATIENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-patients'
+          NOTIFICATION_TOPIC_ARN: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:ivr-ws-${ParticipantName}-notifications'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  RescheduleAppointmentFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupRescheduleAppointment
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-reschedule-appointment'
+      Description: !Sub 'Participant ${ParticipantName}: reschedules appointment'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          APPOINTMENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-appointments'
+          AVAILABLE_SLOTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  CancelAppointmentFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupCancelAppointment
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-cancel-appointment'
+      Description: !Sub 'Participant ${ParticipantName}: cancels appointment + frees slot'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          APPOINTMENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-appointments'
+          AVAILABLE_SLOTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-available-slots'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  LookupAppointmentFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupLookupAppointment
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-lookup-appointment'
+      Description: !Sub 'Participant ${ParticipantName}: returns upcoming appointments'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          APPOINTMENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-appointments'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  RequestPrescriptionRefillFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupRequestPrescriptionRefill
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-request-prescription-refill'
+      Description: !Sub 'Participant ${ParticipantName}: submits prescription refill (always pending_review)'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          PRESCRIPTION_REQUESTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-prescription-requests'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  LogCallResultFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupLogCallResult
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-log-call-result'
+      Description: !Sub 'Participant ${ParticipantName}: writes call audit record'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          CALL_LOGS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-call-logs'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  # ============================================================
+  # FLOW-INVOKED LAMBDAS
+  # ============================================================
+
+  CustomerLookupFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupCustomerLookup
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-customer-lookup'
+      Description: !Sub 'Participant ${ParticipantName}: flow-invoked, looks up patient by phone number'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-customer-lookup-role'
+      Timeout: 10
+      MemorySize: 128
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          PATIENTS_TABLE_NAME: !Sub 'ivr-ws-${ParticipantName}-patients'
+      Code:
+        ZipFile: |
+          def handler(event, context):
+              return {'statusCode': 501, 'body': 'Upload real handler code'}
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  CustomerLookupConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CustomerLookupFunction
+      Action: lambda:InvokeFunction
+      Principal: connect.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+
+  UpdateQSessionFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupUpdateQSession
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-update-q-session'
+      Description: !Sub 'Participant ${ParticipantName}: flow-invoked, injects patient context into Q in Connect session'
+      Runtime: nodejs18.x
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-update-q-session-role'
+      Timeout: 8
+      MemorySize: 128
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          CONNECT_INSTANCE_ID: ''
+          AI_ASSISTANT_ID: ''
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return { statusCode: 501, body: 'Upload real handler code' };
+          };
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  UpdateQSessionConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateQSessionFunction
+      Action: lambda:InvokeFunction
+      Principal: connect.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+
+  # ============================================================
+  # UTILITY LAMBDAS (used by day5-data.yaml custom resources)
+  # ============================================================
+
+  SampleDataSeederFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupSampleDataSeeder
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-sample-data-seeder'
+      Description: !Sub 'Participant ${ParticipantName}: one-shot CFN custom resource seeder'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-seeder-role'
+      Timeout: 120
+      MemorySize: 256
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+                  table_name = event['ResourceProperties']['TableName']
+                  raw = event['ResourceProperties'].get('SampleData', '[]')
+                  sample_data = json.loads(raw)
+                  dynamodb = boto3.resource('dynamodb')
+                  ddb_client = boto3.client('dynamodb')
+                  table = dynamodb.Table(table_name)
+                  key_attrs = set()
+                  try:
+                      desc = ddb_client.describe_table(TableName=table_name)['Table']
+                      for k in desc.get('KeySchema', []):
+                          key_attrs.add(k['AttributeName'])
+                      for gsi in desc.get('GlobalSecondaryIndexes', []) or []:
+                          for k in gsi.get('KeySchema', []):
+                              key_attrs.add(k['AttributeName'])
+                  except Exception as e:
+                      print(f'describe_table error: {e}')
+                  seeded, skipped = 0, 0
+                  for item in sample_data:
+                      item = {k: v for k, v in item.items() if v is not None and v != ''}
+                      missing = [k for k in key_attrs if k not in item]
+                      if missing:
+                          skipped += 1
+                          continue
+                      table.put_item(Item=item)
+                      seeded += 1
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS,
+                                   {'ItemsSeeded': seeded, 'ItemsSkipped': skipped})
+              except Exception as e:
+                  print(f'Seeder error: {e}')
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+  ApiKeyRetrievalFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupApiKeyRetrieval
+    Properties:
+      FunctionName: !Sub 'ivr-ws-${ParticipantName}-api-key-retrieval'
+      Description: !Sub 'Participant ${ParticipantName}: CFN custom resource to get API key plaintext'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/ivr-ws-${ParticipantName}-apikey-retrieval-role'
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                      return
+
+                  props = event['ResourceProperties']
+                  client = boto3.client('apigateway')
+
+                  # Support lookup by ID (ApiKeyId) or by name (ApiKeyName)
+                  if 'ApiKeyId' in props:
+                      response = client.get_api_key(apiKey=props['ApiKeyId'], includeValue=True)
+                  elif 'ApiKeyName' in props:
+                      # List all keys and find by name
+                      keys = client.get_api_keys(includeValues=True)['items']
+                      matching = [k for k in keys if k['name'] == props['ApiKeyName']]
+                      if not matching:
+                          raise Exception(f"No API key found with name: {props['ApiKeyName']}")
+                      response = matching[0]
+                  else:
+                      raise Exception('Must provide either ApiKeyId or ApiKeyName')
+
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS,
+                                   {'ApiKeyValue': response['value']})
+              except Exception as e:
+                  print(f'ApiKey retrieval error: {e}')
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
+# ============================================================
+# OUTPUTS
+# ============================================================
+
+Outputs:
+
+  VerifyIdentityFunctionArn:
+    Value: !GetAtt VerifyIdentityFunction.Arn
+
+  CheckAvailableSlotsFunctionArn:
+    Value: !GetAtt CheckAvailableSlotsFunction.Arn
+
+  BookAppointmentFunctionArn:
+    Value: !GetAtt BookAppointmentFunction.Arn
+
+  RescheduleAppointmentFunctionArn:
+    Value: !GetAtt RescheduleAppointmentFunction.Arn
+
+  CancelAppointmentFunctionArn:
+    Value: !GetAtt CancelAppointmentFunction.Arn
+
+  LookupAppointmentFunctionArn:
+    Value: !GetAtt LookupAppointmentFunction.Arn
+
+  RequestPrescriptionRefillFunctionArn:
+    Value: !GetAtt RequestPrescriptionRefillFunction.Arn
+
+  LogCallResultFunctionArn:
+    Value: !GetAtt LogCallResultFunction.Arn
+
+  CustomerLookupFunctionArn:
+    Value: !GetAtt CustomerLookupFunction.Arn
+
+  UpdateQSessionFunctionArn:
+    Value: !GetAtt UpdateQSessionFunction.Arn
+
+  SampleDataSeederFunctionArn:
+    Value: !GetAtt SampleDataSeederFunction.Arn
+
+  ApiKeyRetrievalFunctionArn:
+    Value: !GetAtt ApiKeyRetrievalFunction.Arn
+
+  ApiGatewayAccessLogGroupArn:
+    Value: !GetAtt LogGroupApiGatewayAccess.Arn
+
+  UpdateQSessionNote:
+    Description: >
+      After creating your Connect instance and Q in Connect assistant (Day 3 Lab),
+      update this function with your CONNECT_INSTANCE_ID and AI_ASSISTANT_ID env vars.
+    Value: !Sub 'aws lambda update-function-configuration --function-name ivr-ws-${ParticipantName}-update-q-session --environment "Variables={CONNECT_INSTANCE_ID=YOUR_INSTANCE_ID,AI_ASSISTANT_ID=YOUR_ASSISTANT_ID}" --region us-west-2'
