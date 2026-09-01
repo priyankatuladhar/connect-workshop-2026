@@ -335,7 +335,9 @@ Resources:
           - Sid: GetApiKeyValue
             Effect: Allow
             Action: apigateway:GET
-            Resource: !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys/*'
+            Resource:
+              - !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys/*'
+              - !Sub 'arn:aws:apigateway:${AWS::Region}::/apikeys'
 
   # ============================================================
   # IAM ROLES
