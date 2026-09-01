@@ -11,10 +11,10 @@ Description: >
 #     --stack-name nmc-YOURNAME-day1 \
 #     --parameter-overrides \
 #         ParticipantName=YOURNAME \
-#         KmsKeyArn=arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a \
+#         KmsKeyArn=arn:aws:kms:us-east-1:834283091954:key/8a8dad96-e77e-4b1b-9208-1cc0f30920db \
 #         AdminEmail=your@email.com \
 #     --capabilities CAPABILITY_NAMED_IAM \
-#     --region us-west-2
+#     --region us-east-1
 #
 # Replace YOURNAME with your name (lowercase, letters/numbers/hyphens only, e.g. "alice" or "bob-smith")
 # ============================================================
@@ -37,7 +37,7 @@ Parameters:
     Description: >
       ARN of the shared workshop KMS key. Your instructor will provide this value.
       Do not change it — all participants use the same key.
-    Default: 'arn:aws:kms:us-west-2:834283091954:key/78ce9a4b-973a-49c4-af64-55fe2adb9e2a'
+    Default: 'arn:aws:kms:us-east-1:834283091954:key/8a8dad96-e77e-4b1b-9208-1cc0f30920db'
     AllowedPattern: ^arn:aws:kms:[a-z0-9-]+:[0-9]{12}:key/.+$
     ConstraintDescription: Must be a valid KMS key ARN.
 

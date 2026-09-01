@@ -33,6 +33,26 @@ Metadata:
 
 Resources:
 
+  ApiGatewayCloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'nmc-${ParticipantName}-apigw-cw-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    DependsOn: ApiGatewayCloudWatchRole
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+
   RestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -529,6 +549,7 @@ Resources:
 
   ApiStage:
     Type: AWS::ApiGateway::Stage
+    DependsOn: ApiGatewayAccount
     Properties:
       RestApiId: !Ref RestApi
       DeploymentId: !Ref ApiDeployment

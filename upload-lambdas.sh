@@ -2,19 +2,20 @@
 # Uploads real handler code to all 12 participant Lambda functions.
 # Run this AFTER the Day 3 CloudFormation stack is CREATE_COMPLETE.
 #
-# Usage: bash upload-lambdas.sh <participant-name>
+# Usage: bash upload-lambdas.sh <participant-name> [region]
 # Example: bash upload-lambdas.sh alice
+# Example: bash upload-lambdas.sh alice ap-south-1
 
 set -e
 
 PARTICIPANT="${1}"
-REGION="us-east-1"
+REGION="${2:-us-east-1}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZIPS_DIR="${SCRIPT_DIR}/zips"
 
 if [ -z "$PARTICIPANT" ]; then
   echo "ERROR: participant name required"
-  echo "Usage: bash upload-lambdas.sh <participant-name>"
+  echo "Usage: bash upload-lambdas.sh <participant-name> [region]"
   exit 1
 fi
 
@@ -40,7 +41,7 @@ SUCCESS=0
 FAIL=0
 
 for fn in "${FUNCTIONS[@]}"; do
-  FNAME="ivr-ws-${PARTICIPANT}-${fn}"
+  FNAME="nmc-${PARTICIPANT}-${fn}"
   ZIP="${ZIPS_DIR}/${fn}.zip"
 
   if [ ! -f "$ZIP" ]; then
@@ -65,6 +66,6 @@ echo "Done: ${SUCCESS} uploaded, ${FAIL} skipped"
 echo ""
 echo "Next: wire up update-q-session with your Connect instance and Q assistant IDs:"
 echo "  aws lambda update-function-configuration \\"
-echo "    --function-name ivr-ws-${PARTICIPANT}-update-q-session \\"
+echo "    --function-name nmc-${PARTICIPANT}-update-q-session \\"
 echo "    --environment \"Variables={CONNECT_INSTANCE_ID=YOUR_ID,AI_ASSISTANT_ID=YOUR_ID}\" \\"
 echo "    --region ${REGION}"
