@@ -18,10 +18,12 @@
  */
 
 const {
-  ConnectWisdomService,
-} = require('@aws-sdk/client-wisdom');
+  QConnectClient,
+  SearchSessionsCommand,
+  UpdateSessionDataCommand,
+} = require('@aws-sdk/client-qconnect');
 
-const wisdom = new ConnectWisdomService({ region: process.env.AWS_REGION });
+const wisdom = new QConnectClient({ region: process.env.AWS_REGION });
 
 const CONNECT_INSTANCE_ID = process.env.CONNECT_INSTANCE_ID;
 const AI_ASSISTANT_ID = process.env.AI_ASSISTANT_ID;
@@ -49,29 +51,36 @@ exports.handler = async (event) => {
     sessionData.patientFound = params.patientFound || 'false';
     sessionData.verificationStatus = 'unverified';
 
-    // Find the active Wisdom session for this contact
-    const sessions = await wisdom.listSessions({
-      assistantId: AI_ASSISTANT_ID,
-    });
-
-    // Sessions are keyed by contact ID — find the one for this call
-    const matchingSession = (sessions.sessionSummaries || []).find(
-      (s) => s.sessionData?.contactId === contactId || s.name === contactId
-    );
+    // Search for the active Q in Connect session for this contact
+    let matchingSession = null;
+    try {
+      const sessions = await wisdom.send(new SearchSessionsCommand({
+        assistantId: AI_ASSISTANT_ID,
+        searchExpression: {
+          filters: [{ field: 'NAME', operator: 'EQUALS', value: contactId }],
+        },
+      }));
+      matchingSession = (sessions.sessionSummaries || []).find(
+        (s) => s.name === contactId
+      );
+    } catch (searchErr) {
+      console.log(`update_q_session: session search failed (${searchErr.message}) — session will be created by Q in Connect on first turn`);
+      return { result: 'no_session_yet', contactId };
+    }
 
     if (!matchingSession) {
       console.log(`update_q_session: no session found for contact ${contactId} — will be created by Q in Connect on first turn`);
       return { result: 'no_session_yet', contactId };
     }
 
-    await wisdom.updateSessionData({
+    await wisdom.send(new UpdateSessionDataCommand({
       assistantId: AI_ASSISTANT_ID,
       sessionId: matchingSession.sessionId,
       data: Object.entries(sessionData).map(([key, value]) => ({
         key,
         value: { stringValue: String(value) },
       })),
-    });
+    }));
 
     console.log(`update_q_session: session updated for contact ${contactId}, patient ${params.patientId}`);
     return { result: 'success', contactId, patientId: params.patientId || 'unknown' };

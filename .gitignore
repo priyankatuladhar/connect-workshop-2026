@@ -1,0 +1,6 @@
+node_modules/
+package-lock.json
+
+# temporary zip build artifacts (the canonical zips live in zips/)
+src/**/function.zip
+src/**/*.zip

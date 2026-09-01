@@ -295,9 +295,7 @@ Resources:
           - Sid: WisdomSessionWrite
             Effect: Allow
             Action:
-              - wisdom:UpdateSessionData
-              - wisdom:GetSession
-              - wisdom:ListSessions
+              - wisdom:*
               - connect:DescribeContact
               - connect:GetContactAttributes
             Resource: '*'
