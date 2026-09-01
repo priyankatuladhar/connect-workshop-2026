@@ -9,10 +9,7 @@ info:
 
 servers:
   - url: https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/prod
-    description: >
-      Replace with your API Gateway Invoke URL from the nmc-YOURNAME-day4 stack output (ApiEndpoint).
-      Run: aws cloudformation describe-stacks --stack-name nmc-YOURNAME-day4 --region REGION
-           --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" --output text
+    description: Participant API Gateway endpoint
 
 security:
   - ApiKeyAuth: []
