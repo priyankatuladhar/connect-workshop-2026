@@ -96,6 +96,13 @@ DAY1_STATUS=$(aws cloudformation describe-stacks \
   --query "Stacks[0].StackStatus" \
   --output text 2>/dev/null || echo "NOT_FOUND")
 
+if [ "$DAY1_STATUS" = "REVIEW_IN_PROGRESS" ] || [ "$DAY1_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$DAY1_STATUS" = "CREATE_FAILED" ]; then
+  warn "Day 1 stack is stuck (${DAY1_STATUS}) — deleting and redeploying..."
+  aws cloudformation delete-stack --stack-name "nmc-${PARTICIPANT}-day1" --region "${REGION}"
+  aws cloudformation wait stack-delete-complete --stack-name "nmc-${PARTICIPANT}-day1" --region "${REGION}"
+  DAY1_STATUS="NOT_FOUND"
+fi
+
 if [ "$DAY1_STATUS" != "CREATE_COMPLETE" ] && [ "$DAY1_STATUS" != "UPDATE_COMPLETE" ]; then
   warn "Day 1 stack not found (status: ${DAY1_STATUS}) — deploying it now..."
 
