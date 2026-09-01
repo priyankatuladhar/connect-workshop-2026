@@ -444,7 +444,7 @@ Resources:
     Properties:
       FunctionName: !Sub 'nmc-${ParticipantName}-update-q-session'
       Description: !Sub 'Participant ${ParticipantName}: flow-invoked, injects patient context into Q in Connect session'
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Architectures: [arm64]
       Handler: index.handler
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/nmc-${ParticipantName}-update-q-session-role'
