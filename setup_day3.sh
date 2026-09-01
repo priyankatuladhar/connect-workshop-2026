@@ -77,8 +77,9 @@ echo ""
 info "Step 0 — Getting workshop repository..."
 
 if [ -d "$REPO_DIR/.git" ]; then
-  echo "  Repository already cloned — pulling latest..."
-  git -C "$REPO_DIR" pull --quiet
+  echo "  Repository already cloned — fetching latest..."
+  git -C "$REPO_DIR" fetch --quiet origin
+  git -C "$REPO_DIR" reset --hard origin/main --quiet
   ok "Repository up to date"
 else
   git clone --quiet "$REPO_URL" "$REPO_DIR"
@@ -217,6 +218,7 @@ else
     --stack-name "nmc-${PARTICIPANT}-day4" \
     --parameter-overrides \
       ParticipantName="${PARTICIPANT}" \
+    --capabilities CAPABILITY_NAMED_IAM \
     --region "${REGION}"
 
   aws cloudformation wait stack-create-complete \
