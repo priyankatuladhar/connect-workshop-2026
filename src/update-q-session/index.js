@@ -11,10 +11,12 @@
  *
  * Event shape from Contact Flow:
  *   event.Details.ContactData.ContactId
+ *   event.Details.ContactData.CustomerEndpoint.Address   (the caller ANI — read automatically)
  *   event.Details.Parameters.patientId
  *   event.Details.Parameters.firstName
  *   event.Details.Parameters.lastName
  *   event.Details.Parameters.patientFound
+ *   event.Details.Parameters.phoneNumber         (optional — overrides the ANI)
  *   event.Details.Parameters.preferredLanguage   (optional, defaults to "en")
  *   event.Details.Parameters.verificationStatus  (optional, defaults to "unverified")
  */
@@ -34,6 +36,9 @@ exports.handler = async (event) => {
   try {
     const contactId = event?.Details?.ContactData?.ContactId;
     const params = event?.Details?.Parameters || {};
+    // Caller's number (ANI) is always in ContactData on a voice call — use it so
+    // the AI can register a new patient without asking for the phone number.
+    const ani = event?.Details?.ContactData?.CustomerEndpoint?.Address || '';
 
     if (!contactId) {
       console.error('update_q_session: missing ContactId in event');
@@ -59,6 +64,9 @@ exports.handler = async (event) => {
       .join(' ')
       .trim();
     if (patientName) sessionData.patientName = patientName;
+
+    const phoneNumber = params.phoneNumber || ani;
+    if (phoneNumber) sessionData.phoneNumber = phoneNumber;
 
     sessionData.preferredLanguage = params.preferredLanguage || 'en';
     sessionData.patientFound = params.patientFound || 'false';
