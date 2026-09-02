@@ -12,6 +12,7 @@
  * Event shape from Contact Flow:
  *   event.Details.ContactData.ContactId
  *   event.Details.ContactData.CustomerEndpoint.Address   (the caller ANI — read automatically)
+ *   event.Details.Parameters.sessionArn          (RECOMMENDED — set to $.Wisdom.SessionArn)
  *   event.Details.Parameters.patientId
  *   event.Details.Parameters.firstName
  *   event.Details.Parameters.lastName
@@ -72,39 +73,42 @@ exports.handler = async (event) => {
     sessionData.patientFound = params.patientFound || 'false';
     sessionData.verificationStatus = params.verificationStatus || 'unverified';
 
-    // Search for the active Q in Connect session for this contact
-    let matchingSession = null;
-    try {
-      const sessions = await wisdom.send(new SearchSessionsCommand({
-        assistantId: AI_ASSISTANT_ID,
-        searchExpression: {
-          filters: [{ field: 'NAME', operator: 'EQUALS', value: contactId }],
-        },
-      }));
-      matchingSession = (sessions.sessionSummaries || []).find(
-        (s) => s.name === contactId
-      );
-    } catch (searchErr) {
-      console.log(`update_q_session: session search failed (${searchErr.message}) — session will be created by Q in Connect on first turn`);
-      return { result: 'no_session_yet', contactId };
+    // Preferred: the Contact Flow passes the session ARN it just created, as the
+    // "sessionArn" parameter set to $.Wisdom.SessionArn. Fall back to searching
+    // by contact id (older flows). UpdateSessionData accepts the ARN or the id.
+    let sessionId = params.sessionArn || params.sessionId || '';
+
+    if (!sessionId) {
+      try {
+        const sessions = await wisdom.send(new SearchSessionsCommand({
+          assistantId: AI_ASSISTANT_ID,
+          searchExpression: {
+            filters: [{ field: 'NAME', operator: 'EQUALS', value: contactId }],
+          },
+        }));
+        const match = (sessions.sessionSummaries || []).find((s) => s.name === contactId);
+        sessionId = (match && match.sessionId) || '';
+      } catch (searchErr) {
+        console.log(`update_q_session: session search failed (${searchErr.message})`);
+      }
     }
 
-    if (!matchingSession) {
-      console.log(`update_q_session: no session found for contact ${contactId} — will be created by Q in Connect on first turn`);
+    if (!sessionId) {
+      console.log(`update_q_session: no session for contact ${contactId} — pass the "sessionArn" parameter as $.Wisdom.SessionArn from the flow`);
       return { result: 'no_session_yet', contactId };
     }
 
     await wisdom.send(new UpdateSessionDataCommand({
       assistantId: AI_ASSISTANT_ID,
-      sessionId: matchingSession.sessionId,
+      sessionId,
       data: Object.entries(sessionData).map(([key, value]) => ({
         key,
         value: { stringValue: String(value) },
       })),
     }));
 
-    console.log(`update_q_session: session updated for contact ${contactId}, patient ${params.patientId}`);
-    return { result: 'success', contactId, patientId: params.patientId || 'unknown' };
+    console.log('update_q_session: session %s updated with %j', sessionId, sessionData);
+    return { result: 'success', contactId, sessionId, patientId: params.patientId || 'unknown' };
 
   } catch (err) {
     console.error('update_q_session error:', err.message);
