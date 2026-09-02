@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs smoke tests against all 8 API endpoints.
+# Runs smoke tests against all 9 API endpoints.
 # Requires $API_ENDPOINT and $API_KEY to be set.
 #
 # Usage:
@@ -87,6 +87,9 @@ test_endpoint "7. Request Prescription Refill" "/tools/request-prescription-refi
 
 test_endpoint "8. Log Call Result" "/tools/log-call-result" \
   '{"patientId":"P-1001","callType":"Inbound","summary":"Patient inquired about slot availability.","disposition":"Resolved"}'
+
+test_endpoint "9. Register New Patient" "/tools/register-new-patient" \
+  '{"firstName":"Smoke","lastName":"Test","phoneNumber":"+16505550000"}'
 
 echo ""
 hr

@@ -15,6 +15,8 @@
  *   event.Details.Parameters.firstName
  *   event.Details.Parameters.lastName
  *   event.Details.Parameters.patientFound
+ *   event.Details.Parameters.preferredLanguage   (optional, defaults to "en")
+ *   event.Details.Parameters.verificationStatus  (optional, defaults to "unverified")
  */
 
 const {
@@ -43,13 +45,24 @@ exports.handler = async (event) => {
       return { result: 'error', reason: 'missing_env_vars' };
     }
 
-    // Build session data — only include non-empty values
+    // Build session data — only include non-empty values.
+    // NOTE: the AI Agent system prompt reads {{$.Custom.patientName}} and
+    // {{$.Custom.preferredLanguage}} — they must be pushed here or the
+    // personalised greeting resolves to an empty string.
     const sessionData = {};
     if (params.patientId) sessionData.patientId = params.patientId;
     if (params.firstName) sessionData.firstName = params.firstName;
     if (params.lastName) sessionData.lastName = params.lastName;
+
+    const patientName = [params.firstName, params.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    if (patientName) sessionData.patientName = patientName;
+
+    sessionData.preferredLanguage = params.preferredLanguage || 'en';
     sessionData.patientFound = params.patientFound || 'false';
-    sessionData.verificationStatus = 'unverified';
+    sessionData.verificationStatus = params.verificationStatus || 'unverified';
 
     // Search for the active Q in Connect session for this contact
     let matchingSession = null;

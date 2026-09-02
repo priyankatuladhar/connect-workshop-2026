@@ -114,6 +114,13 @@ Resources:
       RetentionInDays: !Ref LogRetentionDays
       KmsKeyId: !Ref KmsKeyArn
 
+  LogGroupRegisterNewPatient:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/nmc-${ParticipantName}-register-new-patient'
+      RetentionInDays: !Ref LogRetentionDays
+      KmsKeyId: !Ref KmsKeyArn
+
   LogGroupCustomerLookup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -401,6 +408,36 @@ Resources:
         - Key: Participant
           Value: !Ref ParticipantName
 
+  RegisterNewPatientFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroupRegisterNewPatient
+    Properties:
+      FunctionName: !Sub 'nmc-${ParticipantName}-register-new-patient'
+      Description: !Sub 'Participant ${ParticipantName}: creates a patient account (name + phone only)'
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/nmc-${ParticipantName}-lambda-exec-role'
+      Timeout: 30
+      MemorySize: 256
+      TracingConfig:
+        Mode: Active
+      Environment:
+        Variables:
+          PATIENTS_TABLE_NAME: !Sub 'nmc-${ParticipantName}-patients'
+      Code:
+        ZipFile: |
+          import json
+          def handler(event, context):
+              return {
+                  'statusCode': 501,
+                  'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                  'body': json.dumps({'error': 'Not Implemented', 'message': 'Upload real handler code'})
+              }
+      Tags:
+        - Key: Participant
+          Value: !Ref ParticipantName
+
   # ============================================================
   # FLOW-INVOKED LAMBDAS
   # ============================================================
@@ -612,6 +649,9 @@ Outputs:
 
   LogCallResultFunctionArn:
     Value: !GetAtt LogCallResultFunction.Arn
+
+  RegisterNewPatientFunctionArn:
+    Value: !GetAtt RegisterNewPatientFunction.Arn
 
   CustomerLookupFunctionArn:
     Value: !GetAtt CustomerLookupFunction.Arn

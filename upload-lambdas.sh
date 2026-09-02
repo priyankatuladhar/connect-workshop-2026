@@ -1,5 +1,5 @@
 #!/bin/bash
-# Uploads real handler code to all 12 participant Lambda functions.
+# Uploads real handler code to all 13 participant Lambda functions.
 # Run this AFTER the Day 3 CloudFormation stack is CREATE_COMPLETE.
 #
 # Usage: bash upload-lambdas.sh <participant-name> [region]
@@ -31,6 +31,7 @@ FUNCTIONS=(
   "lookup-appointment"
   "request-prescription-refill"
   "log-call-result"
+  "register-new-patient"
   "customer-lookup"
   "update-q-session"
   "sample-data-seeder"
