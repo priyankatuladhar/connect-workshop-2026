@@ -537,13 +537,21 @@ Resources:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - VerifyIdentityPost
+      - VerifyIdentityOptions
       - CheckAvailableSlotsPost
+      - CheckAvailableSlotsOptions
       - BookAppointmentPost
+      - BookAppointmentOptions
       - RescheduleAppointmentPost
+      - RescheduleAppointmentOptions
       - CancelAppointmentPost
+      - CancelAppointmentOptions
       - LookupAppointmentPost
+      - LookupAppointmentOptions
       - RequestPrescriptionRefillPost
+      - RequestPrescriptionRefillOptions
       - LogCallResultPost
+      - LogCallResultOptions
     Properties:
       RestApiId: !Ref RestApi
 
