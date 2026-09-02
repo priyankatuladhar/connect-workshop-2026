@@ -18,8 +18,9 @@ these same hours.
 
 LOCATION / ADDRESS / WHERE ARE YOU
 Nepal Medical Care
-1250 El Camino Real, Suite 200
-Sunnyvale, CA 94087
+Lazimpat Marg, Kathmandu Metropolitan City - Ward 2
+Kathmandu 44600, Bagmati Province, Nepal
+(near Lazimpat Chowk)
 
 Main phone: (650) 555-0100
 Nurse line (urgent, non-emergency): (650) 555-0111
@@ -27,10 +28,9 @@ Fax: (650) 555-0102
 Email: frontdesk@nepalmedicalcare.example
 
 PARKING AND TRANSIT
-Free patient parking is available in the lot on the north side of the building.
-Accessible parking spaces are located next to the main entrance. The clinic is a
-five-minute walk from the Sunnyvale transit center and is served by local bus routes 55
-and 56.
+Limited on-site parking is available for a few cars and a two-wheeler bay; paid street
+parking is available along Lazimpat Marg. The clinic is a two-minute walk from Lazimpat
+Chowk and is served by local buses and micros toward Maharajgunj and Ratna Park.
 
 PROVIDERS AND SPECIALTIES / WHICH DOCTORS WORK HERE
 Dr. Sarah Mitchell - General Practice - sees patients Monday through Friday.
