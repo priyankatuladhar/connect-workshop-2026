@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   IVR Workshop - Day 4: API Gateway REST API.
-  Creates the /tools/* REST API with 8 POST endpoints backed by your Lambda functions.
+  Creates the /tools/* REST API with 9 POST endpoints backed by your Lambda functions.
   Deploy on Day 4 at the start of the API Gateway lab.
   PREREQUISITE: day3-lambda.yaml stack must be CREATE_COMPLETE.
 
@@ -529,11 +529,73 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/log-call-result'
 
+  # ---- register-new-patient ----
+
+  RegisterNewPatientResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !Ref ToolsResource
+      PathPart: register-new-patient
+
+  RegisterNewPatientPost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RegisterNewPatientResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-register-new-patient/invocations'
+
+  RegisterNewPatientOptions:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RegisterNewPatientResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      Integration:
+        Type: MOCK
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'OPTIONS,POST'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: Empty
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: false
+
+  RegisterNewPatientPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:nmc-${ParticipantName}-register-new-patient'
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestApi}/*/POST/tools/register-new-patient'
+
   # ============================================================
   # DEPLOYMENT + STAGE
   # ============================================================
 
-  ApiDeployment:
+  # NOTE: AWS::ApiGateway::Deployment does not redeploy when methods are
+  # added/changed unless this resource itself changes. When you add or modify
+  # endpoints, bump the logical ID (ApiDeployment -> ApiDeployment2 -> ...) and
+  # update the ApiStage DeploymentId reference below. CloudFormation then
+  # creates the new deployment, repoints the stage, and deletes the old one.
+  ApiDeployment2:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
       - VerifyIdentityPost
@@ -552,15 +614,18 @@ Resources:
       - RequestPrescriptionRefillOptions
       - LogCallResultPost
       - LogCallResultOptions
+      - RegisterNewPatientPost
+      - RegisterNewPatientOptions
     Properties:
       RestApiId: !Ref RestApi
+      Description: 'v2 — adds /tools/register-new-patient'
 
   ApiStage:
     Type: AWS::ApiGateway::Stage
     DependsOn: ApiGatewayAccount
     Properties:
       RestApiId: !Ref RestApi
-      DeploymentId: !Ref ApiDeployment
+      DeploymentId: !Ref ApiDeployment2
       StageName: prod
       TracingEnabled: true
       AccessLogSetting:

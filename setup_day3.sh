@@ -175,6 +175,7 @@ FUNCTIONS=(
   lookup-appointment
   request-prescription-refill
   log-call-result
+  register-new-patient
   customer-lookup
   update-q-session
   sample-data-seeder
