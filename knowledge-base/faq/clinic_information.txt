@@ -1,0 +1,70 @@
+Nepal Medical Care - General Clinic Information
+
+ABOUT THE CLINIC
+Nepal Medical Care (NMC) is a primary care and specialty outpatient clinic. We provide
+administrative front-desk services through ARIA, our AI phone assistant: new patient
+registration, appointment booking, rescheduling, cancellation, appointment lookup,
+insurance verification, and prescription refill routing. Clinical advice, diagnosis, and
+triage are never provided over the phone.
+
+CLINIC HOURS / OPENING HOURS / WHEN DO YOU OPEN
+The clinic is open Monday through Friday, 9:00 AM to 6:00 PM.
+The clinic is closed on Saturday and Sunday.
+The clinic is closed on major public holidays: New Year's Day, Memorial Day,
+Independence Day, Labor Day, Thanksgiving Day, and Christmas Day.
+On weekdays the clinic opens at 9:00 AM and closes at 6:00 PM. The last appointment of
+the day is scheduled at 5:30 PM. Phone lines and the AI assistant are available during
+these same hours.
+
+LOCATION / ADDRESS / WHERE ARE YOU
+Nepal Medical Care
+1250 El Camino Real, Suite 200
+Sunnyvale, CA 94087
+
+Main phone: (650) 555-0100
+Nurse line (urgent, non-emergency): (650) 555-0111
+Fax: (650) 555-0102
+Email: frontdesk@nepalmedicalcare.example
+
+PARKING AND TRANSIT
+Free patient parking is available in the lot on the north side of the building.
+Accessible parking spaces are located next to the main entrance. The clinic is a
+five-minute walk from the Sunnyvale transit center and is served by local bus routes 55
+and 56.
+
+PROVIDERS AND SPECIALTIES / WHICH DOCTORS WORK HERE
+Dr. Sarah Mitchell - General Practice - sees patients Monday through Friday.
+Dr. James Patel - Internal Medicine - sees patients Monday, Wednesday, and Friday.
+Dr. Linda Nguyen - Pediatrics - sees patients Tuesday and Thursday.
+Dr. Michael Torres - Cardiology - sees patients Monday, Tuesday, and Thursday.
+Dr. Amelia Chen - Dermatology - sees patients Wednesday, Thursday, and Friday.
+Cardiology and Dermatology visits usually require a referral from a primary care
+provider. Ask the front desk if you are unsure whether you need a referral.
+
+VISIT TYPES WE OFFER
+The clinic schedules these visit categories: follow-up visits, annual physical exams,
+new patient visits, lab work, and specialist referrals. When you call, ARIA only records
+the visit category - never a description of symptoms.
+
+SERVICES NOT OFFERED AT THIS CLINIC
+We do not provide emergency care, surgery, advanced imaging (MRI or CT), physical
+therapy, mental health counseling, or dental and vision care. For these, your provider
+will refer you to a partner facility.
+
+INSURANCE / DO YOU ACCEPT MY INSURANCE
+Nepal Medical Care accepts most major PPO and HMO plans, Medicare Part B, and California
+Medicaid (Medi-Cal). Commonly accepted plans include Aetna, Blue Shield of California,
+Cigna, UnitedHealthcare, Kaiser (out-of-network only), and Anthem. Coverage varies by
+individual plan. To confirm whether a specific plan is accepted, ask ARIA to check the
+plan by name, or call the billing team at (650) 555-0100. There is no payment collection
+through the phone system; billing questions go to the front desk.
+
+LANGUAGE AND ACCESSIBILITY
+Interpreter services, including Nepali, Hindi, and Spanish, are available at no cost.
+Please tell the front desk when scheduling if you need an interpreter. The facility is
+wheelchair accessible and offers accessible exam rooms.
+
+UPDATING THIS INFORMATION
+This document is the source of truth for clinic hours, location, and providers. When any
+detail changes, this file is updated in S3 and the knowledge base is re-synced so the AI
+assistant's answers change immediately.

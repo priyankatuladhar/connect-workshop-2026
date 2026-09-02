@@ -1,0 +1,46 @@
+Nepal Medical Care - Emergency Guidance
+
+IF THIS IS A LIFE-THREATENING EMERGENCY / WHEN TO CALL 911
+If you or someone with you has a life-threatening emergency, hang up and call 911
+immediately, or go to the nearest emergency room. Do not wait for a call back and do not
+use the clinic phone system for emergencies. Nepal Medical Care is an outpatient clinic
+and does not provide emergency care.
+
+WHAT COUNTS AS AN EMERGENCY
+Call 911 right away for any of the following:
+- Chest pain, chest pressure, or pain spreading to the arm or jaw.
+- Trouble breathing or shortness of breath.
+- Signs of a stroke: face drooping, arm weakness, slurred or confused speech, sudden
+  severe headache.
+- Severe or uncontrolled bleeding.
+- Fainting, collapse, or unresponsiveness.
+- A severe allergic reaction: swelling of the face or throat, difficulty swallowing,
+  widespread hives with breathing trouble.
+- Thoughts of harming yourself or someone else. You can also call or text 988, the
+  Suicide and Crisis Lifeline, at any time.
+- Severe burns, a major injury, or a broken bone with visible deformity.
+- Poisoning or a suspected overdose. You can also call Poison Control at 1-800-222-1222.
+
+HOW THE AI ASSISTANT HANDLES EMERGENCY LANGUAGE
+If a caller mentions emergency or acute symptom language, the AI assistant stops all
+scheduling activity immediately, tells the caller to hang up and call 911 if it is
+life-threatening, and transfers the call to the clinic's emergency line without asking
+any further questions. This behavior overrides every other step in a call.
+
+URGENT BUT NOT LIFE-THREATENING
+For urgent concerns that are not emergencies - for example, a fever that will not come
+down, a minor cut that may need stitches, a possible sprain, or a medication reaction
+that is uncomfortable but not severe - call the nurse line at (650) 555-0111 during
+clinic hours. The nurse can advise you and, if needed, arrange a same-day visit.
+
+AFTER CLINIC HOURS
+The clinic is open Monday through Friday, 9:00 AM to 6:00 PM. Outside these hours:
+- For an emergency, call 911.
+- For urgent medical questions, call the nurse line at (650) 555-0111 and follow the
+  after-hours instructions to reach the on-call clinician.
+- For non-urgent needs, call back during clinic hours or use the patient portal.
+
+WHAT THE AI ASSISTANT WILL NOT DO
+The AI assistant does not give medical advice, assess symptoms, diagnose, or decide
+whether a situation is an emergency. If you are unsure how serious a situation is, treat
+it as an emergency and call 911.

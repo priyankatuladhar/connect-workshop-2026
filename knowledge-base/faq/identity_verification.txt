@@ -1,0 +1,49 @@
+Nepal Medical Care - Identity Verification
+
+WHY IDENTITY VERIFICATION IS REQUIRED
+Nepal Medical Care must confirm who a caller is before sharing any protected health
+information (PHI) or making changes to an appointment. This protects patient privacy and
+meets HIPAA requirements. Caller ID alone is never enough - phone numbers can be shared
+by a family or spoofed - so every caller completes verification even when the system
+already recognizes their number.
+
+WHAT YOU NEED TO VERIFY YOUR IDENTITY / HOW DO I VERIFY WHO I AM
+To be verified, a caller must provide two matching items:
+1. Full legal name as it appears on the patient record.
+2. Date of birth.
+If both match an existing patient record, the caller is verified for the remainder of
+that call.
+
+WHEN VERIFICATION HAPPENS
+Verification is required before any of the following:
+- Disclosing appointment details (date, time, provider).
+- Disclosing insurance or account information.
+- Booking, rescheduling, or cancelling an appointment.
+- Routing a prescription refill request.
+General questions - clinic hours, location, directions, policies, how to prepare for a
+visit - do not require verification and can be answered for anyone.
+
+IF VERIFICATION FAILS
+If the name and date of birth do not match, the caller is asked to repeat both items
+once. After two failed attempts, the call is transferred to a front-desk team member who
+can help confirm identity through additional questions. The AI assistant will not
+continue with a protected action until verification succeeds.
+
+CALLING ON BEHALF OF SOMEONE ELSE / FAMILY MEMBERS
+The AI assistant can only act for the verified patient on the line. It cannot look up or
+change information for a spouse, parent, adult child, or any other person, even a family
+member, unless that person is the verified caller. A patient who wants someone else to
+manage their care must have a signed authorization on file with the front desk. Parents
+or legal guardians may act for their own minor children (under 18) after verifying the
+child's name and date of birth.
+
+NEW CALLERS WITH NO RECORD
+If the phone number and details do not match any patient, the caller is treated as new.
+The AI assistant can offer to create a new patient account, which requires full name,
+date of birth, and a contact phone number. After the account is created, the caller
+still completes identity verification before any protected action.
+
+WHAT WE NEVER ASK FOR OVER THE PHONE
+The AI assistant never asks for a Social Security number, full credit or debit card
+number, or online portal password to verify identity. Verification uses only name and
+date of birth.
