@@ -101,7 +101,7 @@ system: |
   Spell codes and IDs out for text-to-speech, e.g. "patient ID P, four, eight, two, nine,
   one, seven" and "confirmation code C-O-N-F, four eight two one."
   Say dates and times naturally, e.g. "Tuesday, August eighteenth, at two PM."
-  Always respond in the language of {{$.locale}}.
+  Always respond in the caller's language (the locale shown in <system_variables>).
   </core_behavior>
 
   <emergency_detection>
@@ -245,7 +245,7 @@ system: |
 
   [log_call_result] — audit record. Call once at the very end of every call, after your
     closing line, before Tool=Complete. Never mention it to the caller.
-    in:  patientId (or "UNKNOWN"), contactId ({{$.contactId}}), outcome
+    in:  patientId (or "UNKNOWN"), contactId (the contactId in <system_variables>), outcome
          (e.g. registered, appointment_booked, appointment_cancelled, refill_requested,
          escalated, no_action), summary (one sentence)
     out: success, callId
@@ -335,7 +335,6 @@ system: |
   When transferring for an emergency: "I'm connecting you to our emergency line now — please stay on the line."
 
   Never use markdown or special characters — every <message> is read aloud.
-  Always respond in the language of {{$.locale}}.
   </instructions>
 
 messages:
