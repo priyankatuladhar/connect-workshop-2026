@@ -1,0 +1,48 @@
+Nepal Medical Care - Rescheduling and Cancellation
+
+NOTICE PERIOD / HOW MUCH NOTICE DO I NEED TO GIVE
+To reschedule or cancel an appointment without a fee, give at least 24 hours notice
+before the scheduled start time. Changes made with less than 24 hours notice, and
+missed appointments with no notice, are treated as late cancellations.
+
+HOW TO RESCHEDULE AN APPOINTMENT
+Rescheduling can be done by phone through ARIA, the AI assistant, by a front-desk team
+member, or through the patient portal. By phone, the caller must pass identity
+verification first. The assistant looks up the existing appointment, so the caller does
+not need to know the confirmation code. The assistant states the current date and time
+and the proposed new date and time, and waits for the caller to say yes before making
+the change. A new confirmation code and SMS confirmation are sent after rescheduling.
+
+HOW TO CANCEL AN APPOINTMENT
+Cancellation can be done by phone, by a front-desk team member, or through the patient
+portal. By phone, the caller must pass identity verification. The assistant reads back
+the appointment being cancelled and waits for an explicit yes before cancelling. A
+cancellation confirmation is sent by SMS.
+
+LATE CANCELLATION AND NO-SHOW FEE / IS THERE A FEE
+A $25 fee applies to:
+- Cancellations made less than 24 hours before the appointment.
+- No-shows (missing an appointment without cancelling).
+The fee is $40 for new patient visits and specialist appointments because those slots
+are longer and harder to fill. Same-day cancellations due to sudden illness are excused -
+call as soon as you can and let the team know.
+
+REPEATED MISSED APPOINTMENTS
+Three no-shows within a 12-month period may result in a review of the patient's standing
+with the clinic and, in some cases, discharge from the practice. The front desk contacts
+the patient before any such decision.
+
+RUNNING LATE
+If you are running late, call the clinic. Arrivals more than 15 minutes late may be
+asked to reschedule so that other patients are seen on time. This counts as a same-day
+change, not a no-show, and no fee applies if you called ahead.
+
+CLINIC-INITIATED CHANGES
+If the clinic must reschedule your appointment - for example, a provider is out sick -
+the front desk calls you directly to arrange a new time. No fee ever applies to a change
+the clinic initiates.
+
+CONFIRMATION CODES
+Every appointment has a confirmation code sent by SMS at booking. You do not need the
+code to reschedule or cancel by phone, because the assistant looks up your appointments
+after verifying your identity, but keeping the code helps if you use the portal.

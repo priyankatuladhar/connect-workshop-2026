@@ -1,0 +1,54 @@
+Nepal Medical Care - Booking an Appointment
+
+HOW TO BOOK AN APPOINTMENT
+Appointments can be booked three ways:
+- By phone through ARIA, the AI assistant, during clinic hours.
+- By speaking with a front-desk team member.
+- Through the patient portal at any time.
+When booking by phone, the caller must first pass identity verification (full name and
+date of birth). New callers can have an account created on the same call.
+
+WHAT INFORMATION IS NEEDED TO BOOK
+To book an appointment the assistant collects:
+- The provider you want to see, or the type of care you need.
+- A preferred date and time, or a general window such as "morning" or "afternoon".
+- The visit category: follow-up, annual physical, new patient visit, lab work, or
+  specialist referral.
+The assistant records only the visit category, never a description of symptoms. Before
+the booking is finalized, the assistant reads back the provider, date, time, and reason
+and waits for the caller to say yes. After booking, a confirmation code is given and an
+SMS confirmation is sent.
+
+SAME-DAY APPOINTMENTS / CAN I BOOK A SAME-DAY APPOINTMENT
+Same-day appointments are available for urgent but non-emergency needs, subject to
+provider availability. Call as early in the day as possible; same-day slots are limited
+and usually fill by late morning. Same-day requests are more likely to be accommodated
+with a General Practice provider than with a specialist. If no same-day slot is open,
+the assistant will offer the earliest available alternatives.
+
+WALK-IN POLICY / CAN I WALK IN WITHOUT AN APPOINTMENT
+Walk-in patients are seen Monday through Friday before 4:00 PM, subject to provider
+availability. Walk-ins are worked in between scheduled appointments, so wait times vary
+and can be long. Booking ahead by phone or portal is always recommended. Walk-ins are
+not accepted in the last two hours before closing so that scheduled patients are seen on
+time. Specialist visits (Cardiology, Dermatology) are by appointment only and are not
+available as walk-ins.
+
+NEW PATIENT APPOINTMENTS
+New patient visits are longer than routine visits. Please plan for up to 60 minutes and
+arrive 15 minutes early to complete intake. Bring a photo ID, insurance card, a list of
+current medications, and records from any previous provider if available.
+
+REFERRALS
+Cardiology and Dermatology appointments generally require a referral from a primary care
+provider. If you do not have a referral, book with a General Practice or Internal
+Medicine provider first, or ask the front desk whether your plan requires one.
+
+BOOKING WINDOW AND CONFIRMATION
+Appointments can be booked up to 90 days in advance. You will receive an SMS confirmation
+after booking and a reminder message the day before your visit. Keep the confirmation
+code - it is used to look up, reschedule, or cancel the appointment.
+
+ARRIVING FOR YOUR APPOINTMENT
+Arrive 15 minutes before the scheduled time. If you arrive more than 15 minutes late,
+the visit may need to be rescheduled so that other patients are seen on time.

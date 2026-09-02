@@ -1,0 +1,49 @@
+Nepal Medical Care - Prescription Refill Requests
+
+HOW TO REQUEST A REFILL / HOW DO I GET A PRESCRIPTION REFILL
+There are three ways to request a refill:
+- Call the clinic and ask ARIA, the AI assistant, to route a refill request.
+- Ask your pharmacy to send a refill request to the clinic.
+- Submit a refill request through the patient portal.
+A refill request by phone requires identity verification (full name and date of birth).
+
+WHAT THE ASSISTANT NEEDS FOR A REFILL REQUEST
+- The name of the medication (name only).
+- Your preferred pharmacy name and location.
+The assistant confirms the medication name and pharmacy, then routes the request to your
+provider. The AI assistant does not approve, deny, change a dose, or discuss whether a
+refill is appropriate - every request is reviewed by the prescribing provider.
+
+HOW LONG A REFILL TAKES / REFILL PROCESSING TIME
+Routine refill requests are reviewed and processed within 48 to 72 business hours after
+the request is received. Requests submitted on a Friday or before a holiday may take
+until the next business day to begin processing. Please send refill requests at least 5
+days before you run out of medication.
+
+URGENT REFILLS
+If you have less than 2 days of medication left, say so when you call. The request is
+flagged as urgent and prioritized, but an urgent refill may still require a same-day or
+next-day appointment before the provider will approve it.
+
+CONTROLLED SUBSTANCES
+Controlled substances cannot be refilled by phone or through the AI assistant. These
+include opioid pain medications, ADHD stimulant medications, certain anti-anxiety
+medications, and some sleep medications. A refill for a controlled substance requires an
+office visit, and these prescriptions are generally reviewed every 3 months. Early
+refills are not provided.
+
+WHEN A VISIT IS REQUIRED BEFORE A REFILL
+A refill may be held until you are seen if:
+- You have not had an office visit in the past 12 months.
+- The medication requires lab monitoring that is overdue.
+- You are reporting side effects or asking for a dose change.
+- The prescription has no refills remaining and the provider wants to reassess.
+
+AFTER YOU REQUEST A REFILL
+The assistant tells you the request has been sent to your provider for review. You will
+be contacted, or the pharmacy will be notified, once the provider makes a decision. If
+you have not heard back after 72 business hours, call the clinic to check on the status.
+
+PHARMACY INFORMATION
+The clinic can send prescriptions electronically to any pharmacy in the United States.
+Have your pharmacy's name and city ready when you call.
