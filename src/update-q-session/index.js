@@ -117,17 +117,28 @@ exports.handler = async (event) => {
       return { result: 'no_session_yet', contactId };
     }
 
+    // sessionId may be a full ARN: arn:aws:wisdom:REGION:ACCT:session/ASSISTANT_ID/SESSION_ID
+    // The session belongs to ASSISTANT_ID — use that, not the env var, or
+    // UpdateSessionData returns "Session does not exist".
+    let assistantId = AI_ASSISTANT_ID;
+    let sessionIdOnly = sessionId;
+    if (sessionId.includes(':session/')) {
+      const parts = sessionId.split('/');
+      sessionIdOnly = parts[parts.length - 1];
+      if (parts.length >= 3) assistantId = parts[parts.length - 2];
+    }
+
     await wisdom.send(new UpdateSessionDataCommand({
-      assistantId: AI_ASSISTANT_ID,
-      sessionId,
+      assistantId,
+      sessionId: sessionIdOnly,
       data: Object.entries(sessionData).map(([key, value]) => ({
         key,
         value: { stringValue: String(value) },
       })),
     }));
 
-    console.log('update_q_session: session %s updated with %j', sessionId, sessionData);
-    return { result: 'success', contactId, sessionId, patientId: params.patientId || 'unknown' };
+    console.log('update_q_session: assistant %s session %s updated with %j', assistantId, sessionIdOnly, sessionData);
+    return { result: 'success', contactId, sessionId: sessionIdOnly, patientId: params.patientId || 'unknown' };
 
   } catch (err) {
     console.error('update_q_session error:', err.message);
