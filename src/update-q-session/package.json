@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-connect": "^3.700.0",
     "@aws-sdk/client-qconnect": "^3.1124.0"
   }
 }
