@@ -27,8 +27,10 @@ const {
   SearchSessionsCommand,
   UpdateSessionDataCommand,
 } = require('@aws-sdk/client-qconnect');
+const { ConnectClient, DescribeContactCommand } = require('@aws-sdk/client-connect');
 
 const wisdom = new QConnectClient({ region: process.env.AWS_REGION });
+const connect = new ConnectClient({ region: process.env.AWS_REGION });
 
 const CONNECT_INSTANCE_ID = process.env.CONNECT_INSTANCE_ID;
 const AI_ASSISTANT_ID = process.env.AI_ASSISTANT_ID;
@@ -36,6 +38,7 @@ const AI_ASSISTANT_ID = process.env.AI_ASSISTANT_ID;
 exports.handler = async (event) => {
   try {
     const contactId = event?.Details?.ContactData?.ContactId;
+    const instanceArn = event?.Details?.ContactData?.InstanceARN || '';
     const params = event?.Details?.Parameters || {};
     // Caller's number (ANI) is always in ContactData on a voice call — use it so
     // the AI can register a new patient without asking for the phone number.
@@ -73,10 +76,26 @@ exports.handler = async (event) => {
     sessionData.patientFound = params.patientFound || 'false';
     sessionData.verificationStatus = params.verificationStatus || 'unverified';
 
-    // Preferred: the Contact Flow passes the session ARN it just created, as the
-    // "sessionArn" parameter set to $.Wisdom.SessionArn. Fall back to searching
-    // by contact id (older flows). UpdateSessionData accepts the ARN or the id.
+    // Find the Q in Connect session ARN for this contact. Order:
+    //  1. sessionArn parameter, if the flow passes one ($.Wisdom.SessionArn)
+    //  2. DescribeContact -> WisdomInfo.SessionArn  (works once the flow's
+    //     Amazon Q in Connect block has run — no flow parameter needed)
+    //  3. SearchSessions by name (legacy fallback)
     let sessionId = params.sessionArn || params.sessionId || '';
+
+    if (!sessionId && instanceArn && contactId) {
+      try {
+        const instanceId = instanceArn.split('/').pop();
+        const contact = await connect.send(new DescribeContactCommand({
+          InstanceId: instanceId,
+          ContactId: contactId,
+        }));
+        sessionId = contact?.Contact?.WisdomInfo?.SessionArn || '';
+        if (sessionId) console.log('update_q_session: got session from DescribeContact');
+      } catch (descErr) {
+        console.log(`update_q_session: DescribeContact failed (${descErr.message})`);
+      }
+    }
 
     if (!sessionId) {
       try {
@@ -94,7 +113,7 @@ exports.handler = async (event) => {
     }
 
     if (!sessionId) {
-      console.log(`update_q_session: no session for contact ${contactId} — pass the "sessionArn" parameter as $.Wisdom.SessionArn from the flow`);
+      console.log(`update_q_session: no Q session for contact ${contactId} yet — the Amazon Q in Connect block must run before this Lambda`);
       return { result: 'no_session_yet', contactId };
     }
 
